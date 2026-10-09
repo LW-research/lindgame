@@ -1,0 +1,161 @@
+{
+  "characters": {
+    "heartsping": {
+      "greeting": {
+        "file": "audio/teenieping/heartsping/greeting.mp3",
+        "text": "Hi there! I am Heartsping! Let's fill today with love and sparkles, chuping!"
+      },
+      "catchphrase": {
+        "file": "audio/teenieping/heartsping/catchphrase.mp3",
+        "text": "Heart power! Chuping!"
+      },
+      "cheer_1": {
+        "file": "audio/teenieping/heartsping/cheer_1.mp3",
+        "text": "Heart power! You did it, chuping!"
+      },
+      "cheer_2": {
+        "file": "audio/teenieping/heartsping/cheer_2.mp3",
+        "text": "Wonderful job! Your heart shines so bright!"
+      },
+      "tag": {
+        "file": "audio/teenieping/heartsping/tag.mp3",
+        "text": "Heart power! Heartsping is here for you!"
+      },
+      "hint": {
+        "file": "audio/teenieping/heartsping/hint.mp3",
+        "text": "Let's think with a happy heart! We can do it together, chuping!"
+      }
+    },
+    "lalaping": {
+      "greeting": {
+        "file": "audio/teenieping/lalaping/greeting.mp3",
+        "text": "Hello, superstar! Lalaping is here! Let's make learning sing with joy, lala!"
+      },
+      "catchphrase": {
+        "file": "audio/teenieping/lalaping/catchphrase.mp3",
+        "text": "Lala! Sing with joy!"
+      },
+      "cheer_1": {
+        "file": "audio/teenieping/lalaping/cheer_1.mp3",
+        "text": "Lala! That answer was music to my ears!"
+      },
+      "cheer_2": {
+        "file": "audio/teenieping/lalaping/cheer_2.mp3",
+        "text": "Super star dancer! You got it right, lala!"
+      },
+      "tag": {
+        "file": "audio/teenieping/lalaping/tag.mp3",
+        "text": "Music time! Lalaping is ready to sing and play, lala!"
+      },
+      "hint": {
+        "file": "audio/teenieping/lalaping/hint.mp3",
+        "text": "Listen to the rhythm! Lalaping is singing for you, lala!"
+      }
+    },
+    "chachaping": {
+      "greeting": {
+        "file": "audio/teenieping/chachaping/greeting.mp3",
+        "text": "Hello, little friend! Chachaping is here! Hope always blooms bright, chacha!"
+      },
+      "catchphrase": {
+        "file": "audio/teenieping/chachaping/catchphrase.mp3",
+        "text": "Hope blooms! Chacha!"
+      },
+      "cheer_1": {
+        "file": "audio/teenieping/chachaping/cheer_1.mp3",
+        "text": "Hope bloomed right on target, chacha!"
+      },
+      "cheer_2": {
+        "file": "audio/teenieping/chachaping/cheer_2.mp3",
+        "text": "Wonderful! You grew smarter with every step!"
+      },
+      "tag": {
+        "file": "audio/teenieping/chachaping/tag.mp3",
+        "text": "Lucky clover power! Chachaping tagged in, chacha!"
+      },
+      "hint": {
+        "file": "audio/teenieping/chachaping/hint.mp3",
+        "text": "Let your mind rest like gentle grass. Hope is always here, chacha!"
+      }
+    },
+    "gogoping": {
+      "greeting": {
+        "file": "audio/teenieping/gogoping/greeting.mp3",
+        "text": "Aza! Gogoping reporting for duty! Brave heroes never give up, gogo!"
+      },
+      "catchphrase": {
+        "file": "audio/teenieping/gogoping/catchphrase.mp3",
+        "text": "Never give up! Gogo!"
+      },
+      "cheer_1": {
+        "file": "audio/teenieping/gogoping/cheer_1.mp3",
+        "text": "Aza! High five! Brave and brilliant, gogo!"
+      },
+      "cheer_2": {
+        "file": "audio/teenieping/gogoping/cheer_2.mp3",
+        "text": "Powerful thinking! You smashed that challenge!"
+      },
+      "tag": {
+        "file": "audio/teenieping/gogoping/tag.mp3",
+        "text": "Hero power! Gogoping tagged in! Full speed ahead!"
+      },
+      "hint": {
+        "file": "audio/teenieping/gogoping/hint.mp3",
+        "text": "Stand tall and take courage! We tackle big numbers together, gogo!"
+      }
+    },
+    "dadaping": {
+      "greeting": {
+        "file": "audio/teenieping/dadaping/greeting.mp3",
+        "text": "Greetings! Dadaping is at your service. Let us learn with wisdom and care, dada!"
+      },
+      "catchphrase": {
+        "file": "audio/teenieping/dadaping/catchphrase.mp3",
+        "text": "Proper and neat! Dada!"
+      },
+      "cheer_1": {
+        "file": "audio/teenieping/dadaping/cheer_1.mp3",
+        "text": "Proper, neat, and correct! Wonderfully done, dada!"
+      },
+      "cheer_2": {
+        "file": "audio/teenieping/dadaping/cheer_2.mp3",
+        "text": "Splendid logic! Your mind is razor sharp!"
+      },
+      "tag": {
+        "file": "audio/teenieping/dadaping/tag.mp3",
+        "text": "Wisdom and logic! Dadaping has joined the team, dada!"
+      },
+      "hint": {
+        "file": "audio/teenieping/dadaping/hint.mp3",
+        "text": "Check each column carefully, step by step, dada!"
+      }
+    },
+    "happyping": {
+      "greeting": {
+        "file": "audio/teenieping/happyping/greeting.mp3",
+        "text": "Yaaaay! Happyping has arrived! Pop, pop, bubbles of happiness everywhere!"
+      },
+      "catchphrase": {
+        "file": "audio/teenieping/happyping/catchphrase.mp3",
+        "text": "Bubbles of happiness! Happyping!"
+      },
+      "cheer_1": {
+        "file": "audio/teenieping/happyping/cheer_1.mp3",
+        "text": "Pop, pop! That answer popped with happiness!"
+      },
+      "cheer_2": {
+        "file": "audio/teenieping/happyping/cheer_2.mp3",
+        "text": "Sparkly happy smiles for you! You got it!"
+      },
+      "tag": {
+        "file": "audio/teenieping/happyping/tag.mp3",
+        "text": "Bubble pop! Happyping is tagged in! Woohoo!"
+      },
+      "hint": {
+        "file": "audio/teenieping/happyping/hint.mp3",
+        "text": "Do not worry, be happy! Pop a magic bubble and try again!"
+      }
+    }
+  },
+  "version": "1.0"
+}

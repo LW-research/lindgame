@@ -1,0 +1,252 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Catch! Teenieping Magic Academy – Math &amp; Reading Game for Kids</title>
+  <meta name="description" content="Catch! Teenieping Magic Academy: Learn math up to 4 digits and read fun stories led by Heartsping, Lalaping, Chachaping, Gogoping, Dadaping, and Happyping!">
+  <meta name="theme-color" content="#151a52">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>💖</text></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Andika:wght@400;700&family=Fredoka:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <div class="sky" aria-hidden="true"></div>
+
+  <div class="tp-tag-banner" id="tp-tag-banner" hidden role="alert" aria-live="assertive">
+    <div class="tp-banner-content">
+      <div class="tp-banner-badge" id="tp-banner-badge"></div>
+      <div class="tp-banner-info">
+        <span class="tp-banner-tag">Teenieping Tag Team! ✨</span>
+        <span class="tp-banner-title" id="tp-banner-text">Heartsping tagged in Lalaping!</span>
+      </div>
+    </div>
+  </div>
+
+  <main id="app">
+    <!-- Offline Launcher Tip Banner (visible only when opened directly via file:// and server not running) -->
+    <div id="launcher-tip-banner" class="launcher-tip" hidden>
+      <span class="launcher-tip-icon">💖</span>
+      <span class="launcher-tip-text">
+        Offline Mode active. To hear real Teenieping cartoon voices, double-click <strong>Play.command</strong> or <strong>LindGame.app</strong> in the game folder!
+      </span>
+      <button id="btn-close-launcher-tip" class="launcher-tip-close" aria-label="Close tip">✕</button>
+    </div>
+
+    <!-- CATCH! TEENIEPING TAG-TEAM COMPANION -->
+    <aside class="tp-companion" id="tp-companion" aria-label="Teenieping leader companion">
+      <button class="tp-avatar-btn" id="tp-avatar-btn" title="Tap to talk to your Teenieping leader!">
+        <div class="tp-avatar-frame" id="tp-avatar-frame" aria-hidden="true"></div>
+        <span class="tp-switch-hint" id="tp-switch-hint">Talk 💬</span>
+      </button>
+      <div class="tp-speech-bubble" id="tp-speech-bubble" role="status" aria-live="polite">
+        <div class="tp-bubble-meta">
+          <strong class="tp-bubble-name" id="tp-bubble-name">Heartsping</strong>
+          <span class="tp-bubble-korean" id="tp-bubble-korean">하츄핑</span>
+          <span class="tp-bubble-symbol" id="tp-bubble-symbol">💖</span>
+        </div>
+        <p class="tp-bubble-text" id="tp-bubble-text">Heart power! Chuping!</p>
+      </div>
+      <button class="tp-switch-btn" id="btn-switch-tp" title="Choose or switch your Teenieping leader" aria-label="Switch Teenieping character">
+        <span class="tp-switch-icon" aria-hidden="true">🔄</span>
+        <span class="tp-switch-label">Switch</span>
+      </button>
+    </aside>
+
+    <!-- HOME -->
+    <section class="screen" data-screen="home" aria-labelledby="home-title">
+      <header class="home-header">
+        <h1 id="home-title" tabindex="-1">Teenieping <span>Magic Academy</span></h1>
+        <div class="star-badge" aria-label="Stars collected"><span aria-hidden="true">⭐</span><b class="js-stars">0</b></div>
+      </header>
+
+      <div class="rocket-stage">
+        <div class="rocket" aria-hidden="true">
+          <svg viewBox="0 0 120 210" class="rocket-svg">
+            <defs>
+              <linearGradient id="rk-body" x1="0" x2="1">
+                <stop offset="0" stop-color="#d9ddf7"/><stop offset=".5" stop-color="#ffffff"/><stop offset="1" stop-color="#a9b0e0"/>
+              </linearGradient>
+              <linearGradient id="rk-flame" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0" stop-color="#fff3b0"/><stop offset=".45" stop-color="#ffb347"/><stop offset="1" stop-color="#ff5e62" stop-opacity="0"/>
+              </linearGradient>
+            </defs>
+            <path class="flame" d="M44 150 Q60 212 76 150 Z" fill="url(#rk-flame)"/>
+            <path d="M32 112 L10 160 L42 146 Z" fill="#ff7a8a"/>
+            <path d="M88 112 L110 160 L78 146 Z" fill="#ff7a8a"/>
+            <path d="M60 6 C96 40 96 112 82 150 L38 150 C24 112 24 40 60 6 Z" fill="url(#rk-body)"/>
+            <path d="M60 6 C72 17 80 30 85 44 L35 44 C40 30 48 17 60 6 Z" fill="#ff7a8a"/>
+            <circle cx="60" cy="82" r="17" fill="#6ec8ff" stroke="#2b2350" stroke-width="5"/>
+            <circle cx="54" cy="76" r="5" fill="#fff" opacity=".75"/>
+            <path d="M48 150 L72 150 L67 160 L53 160 Z" fill="#7a80b8"/>
+          </svg>
+        </div>
+        <div class="fuel">
+          <p class="fuel-label" id="fuel-label">Collect stars to fuel your rocket!</p>
+          <div class="fuel-bar" role="progressbar" aria-labelledby="fuel-label" aria-valuemin="0" aria-valuemax="100" id="fuel-bar">
+            <div class="fuel-fill" id="fuel-fill"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="mode-cards">
+        <button class="mode-card mode-math" id="btn-math" data-say="Math Missions">
+          <span class="mode-icon" aria-hidden="true">🔢</span>
+          <span class="mode-title">Math Missions</span>
+          <span class="mode-sub">Add and take away</span>
+        </button>
+        <button class="mode-card mode-words" id="btn-words" data-say="Word Hunt">
+          <span class="mode-icon" aria-hidden="true">📖</span>
+          <span class="mode-title">Word Hunt</span>
+          <span class="mode-sub">Find and read words</span>
+        </button>
+        <button class="mode-card mode-stories" id="btn-stories" data-say="Story Time">
+          <span class="mode-icon" aria-hidden="true">📚</span>
+          <span class="mode-title">Story Time</span>
+          <span class="mode-sub">Read stories &amp; fill in words</span>
+        </button>
+      </div>
+
+      <footer class="home-footer">
+        <button class="chip" id="btn-sound" aria-pressed="true">🔊 Voice on</button>
+        <button class="chip" id="btn-reset">↺ Start over</button>
+      </footer>
+    </section>
+
+    <!-- PLANET MAP -->
+    <section class="screen" data-screen="map" aria-labelledby="map-title" hidden>
+      <header class="topbar">
+        <button class="icon-btn js-home" id="btn-map-home" aria-label="Home">🏠</button>
+        <h2 id="map-title" tabindex="-1">Pick a Planet</h2>
+        <div class="star-badge" aria-label="Stars collected"><span aria-hidden="true">⭐</span><b class="js-stars">0</b></div>
+      </header>
+      <ol class="planet-path" id="planet-path"></ol>
+    </section>
+
+    <!-- MATH MISSION -->
+    <section class="screen" data-screen="mission" id="screen-mission" aria-labelledby="mission-title" hidden>
+      <header class="topbar">
+        <button class="icon-btn" id="btn-mission-back" aria-label="Back to planets">⬅️</button>
+        <h2 id="mission-title" tabindex="-1">The Moon</h2>
+        <div class="progress" id="mission-progress" aria-label="Mission progress"></div>
+      </header>
+
+      <div class="mission-body">
+        <article class="story-card">
+          <div class="story-top">
+            <span class="story-emoji" id="story-emoji" aria-hidden="true">⭐</span>
+            <button class="read-btn" id="btn-read">🔊 Read to me</button>
+          </div>
+          <p class="story-text" id="story-text"></p>
+          <p class="tap-tip">👆 Tap a word to hear it.</p>
+        </article>
+
+        <div class="work">
+          <div class="column-sum" id="column-sum"></div>
+          <p class="feedback" id="feedback" aria-live="polite"></p>
+        </div>
+
+        <div class="pad-area">
+          <div class="pad" id="numpad" role="group" aria-label="Number pad"></div>
+          <button class="chip hint-btn" id="btn-hint">💡 Help me</button>
+        </div>
+
+        <div class="helper" id="helper" hidden></div>
+      </div>
+    </section>
+
+    <!-- WORD HUNT -->
+    <section class="screen" data-screen="words" aria-labelledby="words-title" hidden>
+      <header class="topbar">
+        <button class="icon-btn" id="btn-words-back" aria-label="Back">⬅️</button>
+        <h2 id="words-title" tabindex="-1">Word Hunt</h2>
+        <div class="progress" id="words-progress"></div>
+        <div class="star-badge" aria-label="Stars collected"><span aria-hidden="true">⭐</span><b class="js-stars">0</b></div>
+      </header>
+
+      <div class="word-levels" id="word-levels"></div>
+
+      <div class="word-round" id="word-round" hidden>
+        <p class="word-prompt"><button class="say-btn" id="btn-prompt" aria-label="Hear the question">🔊</button><span id="word-prompt-text"></span></p>
+        <div class="word-target" id="word-target"></div>
+        <div class="word-choices" id="word-choices"></div>
+        <p class="feedback" id="word-feedback" aria-live="polite"></p>
+      </div>
+    </section>
+
+    <!-- STORY TIME: COMPLETE ARTICLES & FILL-IN-THE-BLANKS -->
+    <section class="screen" data-screen="stories" id="screen-stories" aria-labelledby="stories-title" hidden>
+      <header class="topbar">
+        <button class="icon-btn" id="btn-stories-back" aria-label="Back">⬅️</button>
+        <h2 id="stories-title" tabindex="-1">Story Time</h2>
+        <div class="progress" id="story-progress" aria-label="Article blanks progress"></div>
+        <div class="star-badge" aria-label="Stars collected"><span aria-hidden="true">⭐</span><b class="js-stars">0</b></div>
+      </header>
+
+      <!-- Shelf View -->
+      <div class="story-shelf" id="story-shelf"></div>
+
+      <!-- Article Reader & Fill-in-the-blank View -->
+      <div class="story-reader" id="story-reader" hidden>
+        <article class="article-paper" id="article-paper">
+          <div class="article-top">
+            <span class="article-emoji" id="article-emoji" aria-hidden="true">🌙</span>
+            <div class="article-header-text">
+              <h3 class="article-heading" id="article-heading">The Moon in Space</h3>
+              <span class="article-level-tag" id="article-level-tag">Easy • Level 1</span>
+            </div>
+            <button class="read-btn" id="btn-story-read">🔊 Read to me</button>
+          </div>
+          <div class="article-paragraphs" id="article-paragraphs"></div>
+          <p class="tap-tip">👆 Tap any word to hear it! Choose words below to fill in the blanks.</p>
+        </article>
+
+        <!-- Fill-in-the-blank Word Bank -->
+        <div class="word-bank-card" id="word-bank-card">
+          <div class="bank-header">
+            <span class="bank-tag" id="bank-tag">Blank 1 of 4</span>
+            <p class="bank-prompt" id="bank-prompt">Choose the word that fits in blank 1:</p>
+          </div>
+          <div class="bank-choices" id="bank-choices"></div>
+          <p class="feedback" id="article-feedback" aria-live="polite"></p>
+          <div class="article-complete-actions" id="article-complete-actions" hidden>
+            <button class="chip" id="btn-read-completed">🔊 Read Completed Story</button>
+            <button class="big-btn" id="btn-finish-article">Finish &amp; Collect Stars! 🎉</button>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <dialog class="reward" id="reward-dialog" aria-labelledby="reward-title">
+    <div class="reward-emoji" id="reward-emoji" aria-hidden="true">🏆</div>
+    <h2 id="reward-title">Great job!</h2>
+    <p id="reward-text"></p>
+    <div class="reward-stars" id="reward-stars"></div>
+    <button class="big-btn" id="reward-ok" autofocus>Yay! 🎉</button>
+  </dialog>
+
+  <!-- TEENIEPING CHARACTER PICKER DIALOG -->
+  <dialog class="tp-picker-dialog" id="tp-picker-dialog" aria-labelledby="tp-picker-title">
+    <div class="tp-picker-header">
+      <h2 id="tp-picker-title">💖 Choose Your Teenieping Companion! 🧚</h2>
+      <button class="tp-picker-close-btn" id="btn-close-tp-picker" aria-label="Close">✕</button>
+    </div>
+    <p class="tp-picker-sub">Pick your favorite fairy to cheer for you and read your stories!</p>
+    <div class="tp-picker-grid" id="tp-picker-grid"></div>
+    <div class="tp-picker-actions">
+      <button class="chip" id="btn-tp-random">🎲 Surprise Me! (Random Fairy)</button>
+    </div>
+  </dialog>
+
+  <script src="js/data.js"></script>
+  <script src="js/stories.js"></script>
+  <script src="js/math.js"></script>
+  <script src="js/teenieping.js"></script>
+  <script src="js/teenieping-audio.js"></script>
+  <script src="js/audio.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
