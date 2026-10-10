@@ -86,7 +86,7 @@ python3 server.py
 | **🔄 Character Switcher** | Taps `🔄 Switch` in the companion dock to open the fairy modal and choose any character (Heartsping, Lalaping, Chachaping, Gogoping, Dadaping, Happyping) or pick randomly | Agency, customization, emotional connection to favorite characters |
 | **🔢 Math Missions** | Solves **randomly generated 1–4 digit** addition and subtraction problems using a vertical column algorithm | Place value (ones, tens, hundreds, thousands), column arithmetic, mental math |
 | **📖 Word Hunt** | Alternates between "Listen & tap the word" and "Read the word & tap the picture" | Dolch sight-word auditory recognition and independent silent reading |
-| **📚 Story Time** | Reads **freshly generated 4-paragraph stories** and fills in missing words from a focused word bank | Grade 1 reading fluency, sentence context clues, vocabulary decoding |
+| **📚 Story Time** | Reads **freshly generated 4-paragraph stories** in a spacious side-by-side layout (article on the left, answers on the right) and fills in missing words from a focused word bank | Grade 1 reading fluency, sentence context clues, vocabulary decoding |
 | **💖 Teenieping Magic Story** | Reads about Princess Romi, Harmony Town, Heartsping, and the magic catch cube | Immersive cartoon storytelling connecting reading with favorite characters |
 | **🔊 Read to Me / Tap Word** | Hears whole stories read aloud in character voice with live word highlighting, or taps any word to hear it | Phonemic decoding, speech-text synchronization, reading confidence |
 | **💡 Base-Ten Helper** | Visualizes numbers as place-value blocks (thousands cubes, hundreds flats, tens rods, ones cubes) with spoken steps in Teenieping's voice | Concrete-to-abstract transition, eliminating math anxiety |
@@ -206,9 +206,9 @@ The game combines pre-recorded cartoon voice clips with a local neural TTS API:
             │                             │                           │               │                                 │
      answer correct?               choice correct?                    │               ▼                                 │
     ┌───────┴───────┐             ┌───────┴───────┐                   │   ┌─────────────────────────┐                   │
-    │ yes           │ no          │ yes           │ no                │   │ Story Reader Screen     │                   │
-    ▼               ▼             ▼               ▼                   │   │ • "Read to me" in voice │                   │
-┌──────────────┐  tries=1: hint ┌──────────────┐ shake & retry        │   │ • live word highlights  │                   │
+    │ yes           │ no          │ yes           │ no                │   │ Story Reader (2 Columns)│                   │
+    ▼               ▼             ▼               ▼                   │   │ Left : Article reader   │                   │
+┌──────────────┐  tries=1: hint ┌──────────────┐ shake & retry        │   │ Right: Answer word bank │                   │
 │ addStar()    │  tries=2:      │ addStar()    │ Teenieping voice     │   │ • tap word to hear it   │                   │
 │ confetti()   │  helper blocks │ confetti()   │ hint                 │   └───────────┬─────────────┘                   │
 └───────┬──────┘  tries=3: reveal└──────┬──────┘                      │               │ blank word chosen?              │
@@ -262,7 +262,7 @@ The game combines pre-recorded cartoon voice clips with a local neural TTS API:
 | [server.py](server.py) | Server | Python HTTP server hosting static files securely on port 8642 with `GET /api/tts` neural character voice generation, smart disk caching, and automatic browser opening |
 | [package.json](package.json) | Config | Standard project scripts configuration (`npm start` to run server & browser, `npm test` for tests) |
 | [index.html](index.html) | Markup | Single-page UI containing Home, Teenieping Companion Dock with manual switch button, Character Picker dialog, Tag-Team Banner, Planet Map, Math Mission, Word Hunt, Story Time Reader, and Reward Dialog |
-| [css/styles.css](css/styles.css) | Styles | Custom design system: dark space theme, glassmorphism, responsive column grid (`--cols`), place-value colors, base-ten block shapes (cubes, rods, flats, kilos), stationery layout, Teenieping character badges, animated tag-team banner, manual switch button, Character Picker modal grid, launcher tip bar, and read-along word highlights |
+| [css/styles.css](css/styles.css) | Styles | Custom design system: dark space theme, glassmorphism, responsive column grid (`--cols`), place-value colors, base-ten block shapes (cubes, rods, flats, kilos), side-by-side Story Time layout (left article / right word bank), stationery layout, Teenieping character badges, animated tag-team banner, manual switch button, Character Picker modal grid, launcher tip bar, and read-along word highlights |
 | [js/teenieping.js](js/teenieping.js) | Characters | Catch! Teenieping character definitions (Heartsping, Lalaping, Chachaping, Gogoping, Dadaping, Happyping), vector SVG avatars, voice profiles (`pitch`/`rate`), tag-team auto-switch counter, and event emitter |
 | [js/teenieping-audio.js](js/teenieping-audio.js) | Audio Engine | Manages real character clips and routes dynamic question reading through `/api/tts` with word boundary tracking and Web Speech fallback |
 | [audio/teenieping/](audio/teenieping/) | Audio Assets | 36 studio-quality MP3 voice clips across all 6 Teenieping characters + [manifest.json](audio/teenieping/manifest.json) |

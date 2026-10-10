@@ -97,6 +97,12 @@ class TeeniepingGameHandler(SimpleHTTPRequestHandler):
 
         return super().send_head()
 
+    def end_headers(self):
+        """Prevent browser caching of development assets (HTML, CSS, JS) while keeping audio cached."""
+        if hasattr(self, 'path') and not self.path.startswith("/audio/"):
+            self.send_header("Cache-Control", "no-cache, must-revalidate")
+        super().end_headers()
+
     def set_cors_headers(self):
         """Restrict CORS to local origins and file:// scheme."""
         origin = self.headers.get("Origin")
