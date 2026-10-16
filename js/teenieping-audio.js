@@ -306,21 +306,34 @@
     }
 
     // Play real character cheer audio, followed by character voice speech for confirmation
-    playCheerWithSpeech(charId, speechText, speechParams = {}, onEnd) {
+    playCheerWithSpeech(charIdOrText, speechTextOrOpts, speechParams = {}, onEnd) {
+      let resolvedChar = charIdOrText;
+      let resolvedText = speechTextOrOpts;
+      let resolvedParams = speechParams || {};
+      let resolvedOnEnd = onEnd;
+
+      // Defensive normalization if called as (speechText, { charId, ... }, onEnd)
+      if (typeof speechTextOrOpts === 'object' && speechTextOrOpts !== null) {
+        resolvedText = charIdOrText;
+        resolvedParams = speechTextOrOpts;
+        resolvedChar = speechTextOrOpts.charId || root.Teenieping?.getLeader?.()?.id || 'heartsping';
+        if (typeof speechParams === 'function') resolvedOnEnd = speechParams;
+      }
+
       const speechFn = () => {
-        if (speechText) {
-          this.speakText(speechText, {
-            charId,
-            pitch: speechParams.pitch,
-            rate: speechParams.rate,
-            onEnd,
+        if (resolvedText && typeof resolvedText === 'string') {
+          this.speakText(resolvedText, {
+            charId: resolvedChar,
+            pitch: resolvedParams.pitch,
+            rate: resolvedParams.rate,
+            onEnd: resolvedOnEnd,
           });
         } else {
-          onEnd?.();
+          resolvedOnEnd?.();
         }
       };
 
-      const played = this.playCheer(charId, speechFn);
+      const played = this.playCheer(resolvedChar, speechFn);
       if (!played) {
         speechFn();
       }

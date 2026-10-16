@@ -84,13 +84,18 @@ python3 server.py
 | Mode / Feature | What the child does | Pedagogical focus |
 |---|---|---|
 | **🔄 Character Switcher** | Taps `🔄 Switch` in the companion dock to open the fairy modal and choose any character (Heartsping, Lalaping, Chachaping, Gogoping, Dadaping, Happyping) or pick randomly | Agency, customization, emotional connection to favorite characters |
-| **🔢 Math Missions** | Solves **randomly generated 1–4 digit** addition and subtraction problems using a vertical column algorithm | Place value (ones, tens, hundreds, thousands), column arithmetic, mental math |
+| **🔢 Math Missions** | Solves **randomly generated 1–4 digit** addition and subtraction problems on a realistic graph-paper notebook board with interactive **Carry / Borrow (`+1` / `−1`) scratchpad boxes** above the tens, hundreds, and thousands columns | Place value (ones, tens, hundreds, thousands), regrouping/trading visualization, column arithmetic, mental math |
 | **📖 Word Hunt** | Alternates between "Listen & tap the word" and "Read the word & tap the picture" | Dolch sight-word auditory recognition and independent silent reading |
-| **📚 Story Time** | Reads **freshly generated 4-paragraph stories** in a spacious side-by-side layout (article on the left, answers on the right) and fills in missing words from a focused word bank | Grade 1 reading fluency, sentence context clues, vocabulary decoding |
+| **📚 Story Time** | Reads **freshly generated 4-paragraph stories** on a ruled hardcover storybook page with bound spine texture (article on the left, word bank on the right) and fills in missing words | Grade 1 reading fluency, sentence context clues, vocabulary decoding |
+| **🏎️ Turbo Racing** | Launches after an authentic **3-light F1 starting gantry (`3... 2... 1... GO!`)**, drives detailed racing karts (windshields, nose cones, decals, dynamic wheel spin, exhaust smoke) past scrolling parallax scenery, and watches live **6-speed gear (`G1–G6`), RPM tachometer, slipstream drafting, and leader gap telemetry** | Rapid mental arithmetic recall, instant sight-word decoding, high-energy motivation |
+| **🧩 Magic Blocks (Tetris)** | Watches a **real-time falling fairy piece** with a **projected landing ghost silhouette** on a 10×14 3D beveled crystal board; can nudge/rotate manually with tactile arcade buttons or arrow keys while correct answers cast a **Smart Fairy Drop** with vertical motion trails and line-clear callouts (`✨ SINGLE!`, `🔥 DOUBLE!`, `👑 TETRIS!`) | Spatial reasoning, line-clearing gratification, mental math & sight-word accuracy with optional arcade control |
+| **🌍 City Hero** | Flies between world cities (Tokyo 🗼, Washington D.C. 🏛️, Beijing 🏯, Shanghai 🏙️) with realistic **boarding passes (`TP-801`, airport codes, weather)**, views **custom-illustrated panoramic SVG landmark dioramas** with camera shutter flashes, and uses a **visual Market Receipt & Coin Tray** to solve currency math and collect souvenirs for the Hero Scrapbook | Cultural & geographic awareness, applied real-world money math (coins, prices, totals), reading comprehension in real-world contexts |
+| **🍰 Sweet Bakery** | Runs Harmony Town's Patisserie! Fulfills 3-step Teenieping customer order tickets (`1. Mix Batter` $\rightarrow$ `2. Pipe Frosting` $\rightarrow$ `3. Garnish & Serve`) across **Chef Mix**, **Math Kitchen**, or **Reading Recipes** modes, watching each dessert assemble layer-by-layer on a live SVG kitchen turntable and convection oven before displaying it in the glass pastry case | Applied kitchen measurement math, recipe reading comprehension, sequential multi-step problem solving |
+| **🍄 Super Jump Run** | Side-scrolling **Super Mario-style platformer** across 3 Kingdom Worlds (`1-1 Mushroom Meadow`, `1-2 Crystal Underground`, `1-3 Sunset Athletic Sky`)! Solves Math & Reading questions from the existing problem generators to jump, bonk golden `[?]` Mystery Blocks, pop coins (`🪙`), earn **Super Mushroom (`🍄`)** & **Super Star (`🌟`)** power-ups, leap over green Warp Pipes and critters, and slide down the **Castle Flagpole (`🚩`)** after 8 checkpoints | Rapid math & reading recall, streak reinforcement via power-ups, visual obstacle course progression |
 | **💖 Teenieping Magic Story** | Reads about Princess Romi, Harmony Town, Heartsping, and the magic catch cube | Immersive cartoon storytelling connecting reading with favorite characters |
 | **🔊 Read to Me / Tap Word** | Hears whole stories read aloud in character voice with live word highlighting, or taps any word to hear it | Phonemic decoding, speech-text synchronization, reading confidence |
 | **💡 Base-Ten Helper** | Visualizes numbers as place-value blocks (thousands cubes, hundreds flats, tens rods, ones cubes) with spoken steps in Teenieping's voice | Concrete-to-abstract transition, eliminating math anxiety |
-| **⭐ Stars & Rocket Fuel** | Earns stars across all 3 modes to unlock outer planets and library badges | Intrinsic motivation, self-directed learning, goal progression |
+| **⭐ Stars & Rocket Fuel** | Earns stars across all 8 modes to unlock outer planets, scrapbook badges, and library honors | Intrinsic motivation, self-directed learning, goal progression |
 
 ---
 
@@ -178,77 +183,42 @@ The game combines pre-recorded cartoon voice clips with a local neural TTS API:
                                 └──────────────────┬───────────────────┘
                                                    │
                                                    ▼
-┌────────────────────────────────────────────────────────────────────────────────────────┐
-│                                      HOME SCREEN                                       │◄─────────────────────────────┐
-│  • Teenieping Companion Dock                                                           │                              │
-│    - Tap avatar -> TeeniepingAudio.playCatchphrase()                                   │                              │
-│    - Tap "🔄 Switch" -> Opens Character Picker Dialog (#tp-picker-dialog)               │                              │
-│      ┌─────────────────────────────────────────────────────┐                           │                              │
-│      │ Character Picker Modal (all 6 fairies + Surprise Me)│                           │                              │
-│      │ Tap fairy card or "Surprise Me!" -> switchLeader()  ├────────┐                  │                              │
-│      └─────────────────────────────────────────────────────┘        │                  │                              │
-│  • Stars + Rocket Fuel Bar                                          │                  │                              │
-└───┬──────────────────────────────┬──────────────────────────────────┼──────────────┬───┘                              │
-    │ Math Missions                │ Word Hunt                        │              │ Story Time                       │
-    ▼                              ▼                                  │              ▼                                  │
-┌─────────────────────────┐   ┌─────────────────────────┐             │   ┌─────────────────────────┐                   │
-│       PLANET MAP        │   │      LEVEL PICKER       │             │   │       STORY SHELF       │                   │
-│  7 levels (2-4 digits)  │   │ Little / Bigger / Big   │             │   │ 7 themes (Teenieping)   │                   │
-└───────────┬─────────────┘   └───────────┬─────────────┘             │   └───────────┬─────────────┘                   │
-            │ pick planet                 │ pick level                │               │ pick theme                      │
-            ▼                             ▼                           │               ▼                                 │
-┌─────────────────────────┐   ┌─────────────────────────┐             │   ┌─────────────────────────┐                   │
-│ MathEngine.makeProblem  │   │ Word Hunt (8 rounds)    │             │   │ StoryGen.makeArticle()  │                   │
-│  random 1-4 digit op    │   │  even: LISTEN -> tap wrd│             │   │  random cast & 4 paras  │                   │
-│  "Read to me" voiced    │   │  odd : READ -> tap pic  │             │   │  cloze blank extraction │                   │
-│  by active Teenieping!  │   │  target spoken in voice │             │   │  word-tap pronunciations│                   │
-└───────────┬─────────────┘   └───────────┬─────────────┘             │   └───────────┬─────────────┘                   │
-            │                             │                           │               │                                 │
-     answer correct?               choice correct?                    │               ▼                                 │
-    ┌───────┴───────┐             ┌───────┴───────┐                   │   ┌─────────────────────────┐                   │
-    │ yes           │ no          │ yes           │ no                │   │ Story Reader (2 Columns)│                   │
-    ▼               ▼             ▼               ▼                   │   │ Left : Article reader   │                   │
-┌──────────────┐  tries=1: hint ┌──────────────┐ shake & retry        │   │ Right: Answer word bank │                   │
-│ addStar()    │  tries=2:      │ addStar()    │ Teenieping voice     │   │ • tap word to hear it   │                   │
-│ confetti()   │  helper blocks │ confetti()   │ hint                 │   └───────────┬─────────────┘                   │
-└───────┬──────┘  tries=3: reveal└──────┬──────┘                      │               │ blank word chosen?              │
-        │                               │                             │       ┌───────┴───────┐                         │
-        │                               │                             │       ▼ correct       ▼ no                      │
-        │                               │                             │  ┌─────────────────┐    shake & retry           │
-        │                               │                             │  │ capsule locks in│    character voice hint    │
-        │                               │                             │  │ confetti & chime│                            │
-        ▼                               ▼                             │  └────────┬────────┘                            │
-┌────────────────────────────────────────────────────────┐            │           │                                     │
-│               Teenieping.stepQuestion()                │            │           │                                     │
-│            Counter increments (+1 of 3)                │◄───────────┼───────────┘                                     │
-└───────────────────────────────┬────────────────────────┘            │                                                 │
-                                │                                     │                                                 │
-                      Counter >= 3 solved?                            │                                                 │
-                     ┌──────────┴──────────┐                          │                                                 │
-                     ▼ YES                 ▼ NO                       │                                                 │
-                     │          ┌─────────────────────────────────────┴────────┐                                        │
-                     │          │ TeeniepingAudio.playCheerWithSpeech()        │                                        │
-                     │          │ 1. Real character audio cheer clip!          │                                        │
-                     │          │ 2. Equation or story confirmation speech     │                                        │
-                     │          │    in Teenieping's cartoon neural voice!     │                                        │
-                     │          └──────────────────────────────────────────────┘                                        │
-                     ▼                                                                                                  │
-        ┌────────────────────────────────────────────────────────┐                                                      │
-        │  Teenieping.switchLeader(targetId?)                    │◄─────────────────────────────────────────────────────┘
-        │  (Manual Switch via Dialog OR Auto Tag after 3 Qs)     │
-        │ • Sets selected fairy (or random different fairy)      │
-        │ • Updates theme & palette; resets counter to 0         │
-        │ • #tp-tag-banner drops in; plays voiced tag clip!      │
-        └───────────────────────┬────────────────────────────────┘
-                                │
-                                ▼
-      Advance to next question (read in new Teenieping leader's voice!)
-                        │ (mission / round / story complete)
-                        ▼
-        ┌────────────────────────────────────────────────────────┐
-        │                     REWARD DIALOG                      │
-        │  Stars awarded + Fanfare + Teenieping Victory Speech   │─────────────── save & return to map/shelf ───────────┘
-        └────────────────────────────────────────────────────────┘
+┌───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│                                                                      HOME SCREEN                                                                      │◄─────────────────┐
+│  • Teenieping Companion Dock: Tap avatar -> playCatchphrase() | Tap "🔄 Switch" -> Character Picker Modal (#tp-picker-dialog)                         │                  │
+│  • Stars + Rocket Fuel Bar                                                                                                                            │                  │
+└──┬──────────────────┬──────────────────┬──────────────────┬──────────────────┬──────────────────┬──────────────────┬──────────────────┬───────────────┘                  │
+   │ Math Missions    │ Word Hunt        │ Story Time       │ Turbo Racing     │ Magic Blocks     │ City Hero        │ Sweet Bakery     │ Super Jump Run                   │
+   ▼                  ▼                  ▼                  ▼                  ▼                  ▼                  ▼                  ▼                                  │
+┌────────────────┐ ┌────────────────┐ ┌────────────────┐ ┌────────────────┐ ┌────────────────┐ ┌────────────────┐ ┌────────────────┐ ┌────────────────┐                    │
+│   PLANET MAP   │ │  LEVEL PICKER  │ │  STORY SHELF   │ │ DIVISION BAR   │ │ DIVISION BAR   │ │    CITY HUB    │ │  KITCHEN MODE  │ │ KINGDOM WORLD  │                    │
+│ 7 levels (2-4d)│ │ Little/Bigger  │ │ 7 themes cloze │ │ 3-2-1-GO Gantry│ │ 10x14 Gem Grid │ │ Flight Passes  │ │ Mix/Math/Read  │ │ 1-1 / 1-2 / 1-3│                    │
+└───────┬────────┘ └───────┬────────┘ └───────┬────────┘ └───────┬────────┘ └───────┬────────┘ └───────┬────────┘ └───────┬────────┘ └───────┬────────┘                    │
+        │                  │                  │                  │                  │                  │                  │                  │                             │
+        ▼                  ▼                  ▼                  ▼                  ▼                  ▼                  ▼                  ▼                             │
+┌────────────────┐ ┌────────────────┐ ┌────────────────┐ ┌────────────────┐ ┌────────────────┐ ┌────────────────┐ ┌────────────────┐ ┌────────────────┐                    │
+│ MathEngine     │ │ Word Hunt 8 rnd│ │ StoryGen       │ │ RaceEngine     │ │ TetrisEngine   │ │ CityHeroEngine │ │ BakeryEngine   │ │PlatformerEngine│                    │
+│ + Carry/Borrow │ │ listen/read pic│ │ Hardcover page │ │ Gear G1-G6, RPM│ │ Ghost + Gravity│ │ SVG Diorama +  │ │ Order Ticket + │ │ [?] Blocks,    │                    │
+│ Scratchpad Row │ │                │ │ + 4-para cloze │ │ & Slipstream   │ │ + Arcade Nudges│ │ Market Tray    │ │ 3-Layer Cake   │ │ Pipes & Castle │                    │
+└───────┬────────┘ └───────┬────────┘ └───────┬────────┘ └───────┬────────┘ └───────┬────────┘ └───────┬────────┘ └───────┬────────┘ └───────┬────────┘                    │
+        │                  │                  │                  │                  │                  │                  │                  │                             │
+        ▼                  ▼                  ▼                  ▼                  ▼                  ▼                  ▼                  ▼                             │
+   Solve Problem      Pick Sight Word    Fill Cloze Blank   Fast Boost <3.2s   Smart Drop Trail   Shutter/Register   Bake 3 Layers      Bonk [?] & Jump                    │
+   (+1 ⭐ / round)     (+1 ⭐ / round)     (+4 ⭐ / story)     (1000m Podium)     (10 Lines Goal)    (4 City Stops)     (3 Orders Goal)    (8 Checkpoints)                    │
+        │                  │                  │                  │                  │                  │                  │                  │                             │
+        └──────────────────┴──────────────────┴──────────────────┴─────────┬────────┴──────────────────┴──────────────────┴──────────────────┘                             │
+                                                                           ▼                                                                                               │
+                                                ┌─────────────────────────────────────────────────────┐                                                                    │
+                                                │              Teenieping.stepQuestion()              │                                                                    │
+                                                │  • Plays TeeniepingAudio.playCheerWithSpeech()      │                                                                    │
+                                                │  • Every 3 solved questions -> Auto Tag-Team Switch │                                                                    │
+                                                └──────────────────────────┬──────────────────────────┘                                                                    │
+                                                                           │ (mission / round / story / race / blocks / city / bakery / jump course complete)              │
+                                                                           ▼                                                                                               │
+                                                ┌─────────────────────────────────────────────────────┐                                                                    │
+                                                │                    REWARD DIALOG                    │                                                                    │
+                                                │  Stars awarded + Fanfare + Teenieping Victory Voice │────────────────────────── save & return ───────────────────────────┘
+                                                └─────────────────────────────────────────────────────┘
 ```
 
 ---
@@ -261,21 +231,31 @@ The game combines pre-recorded cartoon voice clips with a local neural TTS API:
 | [Play.command](Play.command) | Launcher | Double-clickable macOS shell launcher that starts the server with Terminal output and opens the game |
 | [server.py](server.py) | Server | Python HTTP server hosting static files securely on port 8642 with `GET /api/tts` neural character voice generation, smart disk caching, and automatic browser opening |
 | [package.json](package.json) | Config | Standard project scripts configuration (`npm start` to run server & browser, `npm test` for tests) |
-| [index.html](index.html) | Markup | Single-page UI containing Home, Teenieping Companion Dock with manual switch button, Character Picker dialog, Tag-Team Banner, Planet Map, Math Mission, Word Hunt, Story Time Reader, and Reward Dialog |
-| [css/styles.css](css/styles.css) | Styles | Custom design system: dark space theme, glassmorphism, responsive column grid (`--cols`), place-value colors, base-ten block shapes (cubes, rods, flats, kilos), side-by-side Story Time layout (left article / right word bank), stationery layout, Teenieping character badges, animated tag-team banner, manual switch button, Character Picker modal grid, launcher tip bar, and read-along word highlights |
+| [index.html](index.html) | Markup | Single-page UI containing Home, Teenieping Companion Dock with manual switch button, Character Picker dialog, Tag-Team Banner, Planet Map, Math Mission with carry scratchpad, Word Hunt, Story Time Reader, Turbo Racing Speedway, Magic Blocks, City Hero, Sweet Bakery Kitchen, Super Jump Run (Super Mario-style stage), and Reward Dialog |
+| [css/styles.css](css/styles.css) | Styles | Custom design system: dark space theme, glassmorphism, notebook grid & carry scratchpad, hardcover storybook spine, Turbo Racing starting gantry & telemetry HUD, 3D beveled Tetris blocks with ghost/drop-trail effects & arcade buttons, City Hero boarding passes & dioramas, Sweet Bakery order tickets & turntable, and Super Jump Run HUD, stage viewport & `[?]` Mystery Blocks |
+| [js/platformer.js](js/platformer.js) | Platformer Engine | Super Mario-style side-scrolling platformer logic ([PlatformerEngine](js/platformer.js)): 3 Kingdom Worlds (`1-1`, `1-2`, `1-3`), 8-checkpoint obstacle course (Warp Pipes, Goom-Bugs, Shell Troopers, Pipe Plants), `[?]` Mystery Block question generator delegating to `RaceEngine`/`MathEngine`/`WORD_LEVELS`, Super Mushroom (`🍄`) & Super Star (`🌟`) power-up state machine, and SVG stage renderer (`renderStageSvg`) |
+| [js/bakery.js](js/bakery.js) | Bakery Engine | Harmony Town Sweet Bakery logic ([BakeryEngine](js/bakery.js)): 6 signature Teenieping dessert recipes, 3-step kitchen workflow (Batter $\rightarrow$ Frosting $\rightarrow$ Garnish & Serve), Math/Reading/Mix step question generator reusing `MathEngine` & `WORD_LEVELS`, and progressive layered SVG cake/oven illustration renderer (`renderKitchenSvg`) |
+| [js/race.js](js/race.js) | Racing Engine | High-speed kart racing game logic ([RaceEngine](js/race.js)): generates fast math and reading questions from existing curricula, manages 4-lane racer physics with aerodynamic drag and smooth `visualDistance` interpolation, slipstream drafting, 6-speed gear & RPM telemetry (`computeTelemetry`), and podium finish ranks |
+| [js/tetris.js](js/tetris.js) | Tetris Engine | Teenieping Magic Blocks logic ([TetrisEngine](js/tetris.js)): 10×14 matrix grid, 7 fairy tetromino pieces, real-time active falling piece (`createActivePiece`, `moveActivePiece`, `rotateActivePiece` with wall kicks), ghost landing projection (`getGhostCells`), hard-drop trails (`getDropTrailCells`), smart auto-placement solver (`findBestPlacement`), line-clearing logic, clumsy wrong-answer drops, and fairy rescue spell |
+| [js/cities.js](js/cities.js) | City Hero Engine | Extensible world city exploration engine ([CityHeroEngine](js/cities.js)): dynamic city registry (`registerCity`), 4 default cities (Tokyo 🗼, Washington D.C. 🏛️, Beijing 🏯, Shanghai 🏙️), 16 custom-illustrated panoramic SVG landmark/food/culture/souvenir dioramas (`getStopSceneSvg`), flight metadata (`getCityFlightMeta`), and reading cloze / market math puzzle generator |
 | [js/teenieping.js](js/teenieping.js) | Characters | Catch! Teenieping character definitions (Heartsping, Lalaping, Chachaping, Gogoping, Dadaping, Happyping), vector SVG avatars, voice profiles (`pitch`/`rate`), tag-team auto-switch counter, and event emitter |
-| [js/teenieping-audio.js](js/teenieping-audio.js) | Audio Engine | Manages real character clips and routes dynamic question reading through `/api/tts` with word boundary tracking and Web Speech fallback |
+| [js/teenieping-audio.js](js/teenieping-audio.js) | Audio Engine | Manages real character clips and routes dynamic question reading through `/api/tts` with defensive argument normalization, word boundary tracking, and Web Speech fallback |
 | [audio/teenieping/](audio/teenieping/) | Audio Assets | 36 studio-quality MP3 voice clips across all 6 Teenieping characters + [manifest.json](audio/teenieping/manifest.json) |
 | [audio/cache/](audio/cache/) | Cache Assets | Smart disk cache storing dynamically spoken sentences and sight words for 0ms repeated playback (`.gitkeep` tracked; MP3 cache ignored via `.gitignore`) |
 | [scripts/generate_character_audio.py](scripts/generate_character_audio.py) | Audio Generator | Python script using Edge neural cartoon voice models to generate and update character voice clips |
 | [js/data.js](js/data.js) | Data & Logic | Planet progression configs ([PLANETS](js/data.js#L18-L26)), Dolch sight-word levels, Teenieping magical items & friends, and cloze parser [parseArticle](js/data.js#L82-L114) |
 | [js/stories.js](js/stories.js) | Story Generator | First-grade random story generator ([makeArticle](js/stories.js#L173-L198)) with 7 themes including Teenieping Magic, dynamic character casts, sentence variants, and cloze distractors |
 | [js/math.js](js/math.js) | Math Engine | Random arithmetic generator ([makeProblem](js/math.js#L49-L61)), carrying/borrowing detection ([needsRegroup](js/math.js#L35-L37)), mission sequencer, and place-value hints ([hintSteps](js/math.js#L88-L136)) for up to 4 digits ($\le 9999$) |
-| [js/audio.js](js/audio.js) | Speech Synthesis | Web Speech API speech synthesis prioritizing clear female voices with per-character `pitch` and `rate` control, plus Web Audio API synthesized chimes, clicks, and fanfare |
-| [js/app.js](js/app.js) | App State | Global state management (`localStorage`), screen router, Teenieping companion controller with manual switch modal ([renderCharacterPicker](js/app.js#L264-L290)), tag-team switch listener, multi-column Math Mission controller, Word Hunt loop, and Story Time article controller |
+| [js/audio.js](js/audio.js) | Speech & SFX | Web Speech API speech synthesis prioritizing clear female voices with per-character `pitch` and `rate` control, plus Web Audio API synthesized chimes, countdown beeps, tire brake screech, arcade block clicks/drops, cash register chimes, oven ding, camera shutter clicks, airplane whoosh, retro Mario jump / coin-block / power-up / pipe-bump SFX, and victory fanfare |
+| [js/app.js](js/app.js) | App State | Global state management (`localStorage`), screen router, Teenieping companion controller, multi-column Math Mission controller with carry/borrow scratchpad, Word Hunt loop, Story Time article controller, Turbo Racing loop, Magic Blocks Tetris controller, City Hero controller, Sweet Bakery controller, and Super Jump Run platformer controller |
+| [tests/platformer.test.js](tests/platformer.test.js) | Tests | Unit test suite verifying 8-checkpoint Super Mario-style run state, delegation to existing Math/Reading generators, coin/score/Super Mushroom/Super Star power-ups, pipe-bump penalties, Castle Flagpole win detection, and side-scrolling SVG stage rendering |
+| [tests/bakery.test.js](tests/bakery.test.js) | Tests | Unit test suite verifying 6 Teenieping dessert recipes, non-repeating order ticket selection, Math/Reading/Mix step question generation, and progressive 4-stage SVG cake & oven rendering |
+| [tests/cities.test.js](tests/cities.test.js) | Tests | Unit test suite verifying default world cities, city schema validation, reading cloze / math puzzle generators, dynamic city registration, panoramic SVG dioramas (`getStopSceneSvg`), and flight metadata (`getCityFlightMeta`) |
+| [tests/tetris.test.js](tests/tetris.test.js) | Tests | Unit test suite testing 10×14 grid state, 7 tetromino shapes, collision boundaries, smart solver auto-placement, active falling piece movement & rotation wall kicks, ghost projection, drop trails, line clearing, top-out rescue, and scoring |
+| [tests/race.test.js](tests/race.test.js) | Tests | Unit test suite testing math and reading racing question generation, racer roster creation, speed boost physics, 6-speed gear & RPM telemetry (`computeTelemetry`), slipstream drafting, and finish line detection |
 | [tests/tts-endpoint.test.js](tests/tts-endpoint.test.js) | Tests | Unit test suite verifying `/api/health`, `/api/tts` voice synthesis, security protections, input validation, and disk caching with automated server lifecycle management |
 | [tests/teenieping-audio.test.js](tests/teenieping-audio.test.js) | Tests | Unit test suite verifying audio clip paths, manifest integrity, file existence, clip resolution, `computeWordOffsets`, and Node.js fallback safety |
-| [tests/teenieping.test.js](tests/teenieping.test.js) | Tests | Unit test suite verifying all 6 Teenieping characters, SVG markup, pitch/rate vocal profiles, manager switching, and auto-switching after 3 questions |
+| [tests/teenieping.test.js](tests/teenieping.test.js) | Tests | Unit test suite verifying all 6 Teenieping characters, SVG avatars, pitch/rate vocal profiles, manager switching, and auto-switching after 3 questions |
 | [tests/math.test.js](tests/math.test.js) | Tests | Unit test suite testing 1–4 digit addition and subtraction, carry/borrow constraints, and multi-column hint steps |
 | [tests/article.test.js](tests/article.test.js) | Tests | Unit test suite testing story generation across all 7 themes (including Teenieping), cast variation, blank extractions, distractor sets, and complete text reconstruction |
 
@@ -308,14 +288,26 @@ This codebase has been audited and hardened for safe publication as a public ope
 
 ## 🧪 Automated Testing
 
-Run the full Node.js test suite across all 5 test files:
+Run the full Node.js test suite across all 10 test files:
 
 ```bash
 npm test
 # or: node --test tests/*.test.js
 ```
 
-All 33 tests execute in under 1 second:
+All 67 tests execute in under 1 second:
+- `tests/platformer.test.js`:
+  - 8-checkpoint Super Mario-style run initialization with Kingdom World themes and obstacle course (`createRunState`)
+  - `[?]` Mystery Block Math & Reading question generation delegating to existing `MathEngine`, `WORD_LEVELS`, and `RaceEngine` (`makeBlockQuestion`)
+  - Coin, score, Super Mushroom (`🍄`), and Super Star (`🌟`) power-up progression on fast/streaking jumps (`applyJumpResult`)
+  - Pipe-bump penalty and power-up downgrade on wrong answers
+  - Castle Flagpole completion (`flagpole-win`) at checkpoint 8
+  - Side-scrolling Mario stage SVG rendering with `[?]` blocks, popping coins/mushrooms, pipes, hero sprite, and flagpole (`renderStageSvg`)
+- `tests/bakery.test.js`:
+  - 6 signature Teenieping dessert recipes with 3 reading cloze steps each
+  - Order ticket generation and consecutive recipe deduplication (`pickOrder`)
+  - Math, Reading, and Mix baking step question generation (`makeStepQuestion`)
+  - Progressive 4-stage SVG cake assembly and convection oven rendering (`renderKitchenSvg`)
 - `tests/tts-endpoint.test.js` (Automated server management & security verification):
   - `/api/health` status 200 and health payload
   - `/api/tts` 400 validation on missing parameters
@@ -354,3 +346,29 @@ All 33 tests execute in under 1 second:
   - Randomized first-grade article generation
   - Cloze blank and distractor extraction
   - Full passage text reconstruction
+- `tests/race.test.js`:
+  - 4 unique choices generation with correct answer for math sprint
+  - Sight word and picture question generation with correct answer for reading sprint
+  - Player and 3 rival racers creation with distinct speed stats
+  - Boost and penalty physics on quick answer / wrong answer
+  - Real-time distance update, rank calculation, and finish line detection
+  - 6-speed gear (`G1–G6`), RPM percentage, slipstream drafting detection, and leader gap telemetry (`computeTelemetry`)
+- `tests/tetris.test.js`:
+  - 10×14 grid initialization and boundary check
+  - 7 fairy tetromino shapes and rotation states
+  - Collision detection and resting row calculation (`findDropRow`)
+  - Full-line clearing and gravity drops (`clearCompletedLines`)
+  - Smart solver optimal placement algorithm (`findBestPlacement`)
+  - Fallback placement on wrong answers and top-out rescue clearing
+  - Active falling piece movement, rotation wall kicks, landing ghost projection (`getGhostCells`), and hard-drop trail cells (`getDropTrailCells`)
+- `tests/cities.test.js`:
+  - Default world cities verification (Tokyo, Washington D.C., Beijing, Shanghai)
+  - City schema validation and exploration stop completeness (Landmark, Food, Culture, Souvenir)
+  - Reading cloze puzzle generation with contextual distractors
+  - Market and currency math puzzle generation with coin amounts and prices
+  - Dynamic city registration via open `CityHeroEngine.registerCity()` API
+  - Error rejection on incomplete city configurations
+  - Custom panoramic SVG landmark dioramas (`getStopSceneSvg`) and flight boarding metadata (`getCityFlightMeta`)
+
+
+

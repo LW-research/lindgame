@@ -194,11 +194,11 @@ h1:focus, h2:focus { outline: none; }
 }
 @keyframes shimmer { to { background-position: -200% 0; } }
 
-.mode-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: clamp(14px, 3vw, 28px); flex: 1; }
+.mode-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: clamp(14px, 2.5vw, 24px); flex: 1; }
 .mode-card {
   display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
-  min-height: 220px;
-  padding: 24px;
+  min-height: 200px;
+  padding: 22px;
   border-radius: var(--radius);
   color: var(--ink);
   transition: transform .2s var(--bounce), box-shadow .2s;
@@ -206,6 +206,11 @@ h1:focus, h2:focus { outline: none; }
 .mode-math { background: linear-gradient(145deg, #ffe39a, var(--sun) 50%, #ff9f68); box-shadow: 0 10px 0 #c97a35, 0 20px 40px rgba(255, 159, 104, .3); }
 .mode-words { background: linear-gradient(145deg, #b6f7ff, var(--sky) 50%, #8f8bff); box-shadow: 0 10px 0 #5a55c9, 0 20px 40px rgba(110, 200, 255, .3); }
 .mode-stories { background: linear-gradient(145deg, #ffd3ec, var(--coral) 50%, #d84b72); box-shadow: 0 10px 0 #9e2a4a, 0 20px 40px rgba(255, 122, 138, .3); }
+.mode-race { background: linear-gradient(145deg, #ffd875, #ff6b4a 45%, #ff2a5f); box-shadow: 0 10px 0 #b3203c, 0 20px 40px rgba(255, 107, 74, .35); }
+.mode-tetris { background: linear-gradient(145deg, #d8b4fe, #818cf8 45%, #06b6d4); box-shadow: 0 10px 0 #4f46e5, 0 20px 40px rgba(129, 140, 248, .35); }
+.mode-city-hero { background: linear-gradient(145deg, #a7f3d0, #10b981 45%, #059669); box-shadow: 0 10px 0 #047857, 0 20px 40px rgba(16, 185, 129, .35); }
+.mode-bakery { background: linear-gradient(145deg, #fce7f3, #f472b6 45%, #ec4899); box-shadow: 0 10px 0 #be185d, 0 20px 40px rgba(236, 72, 153, .35); }
+.mode-platformer { background: linear-gradient(145deg, #fde047, #ef4444 48%, #b91c1c); box-shadow: 0 10px 0 #7f1d1d, 0 20px 40px rgba(239, 68, 68, .35); }
 .mode-card:hover { transform: translateY(-6px) rotate(-1deg); }
 .mode-card:active { transform: translateY(6px); box-shadow: 0 3px 0 rgba(0, 0, 0, .3); }
 .mode-icon { font-size: clamp(3.5rem, 9vw, 5rem); animation: float 4s ease-in-out infinite; }
@@ -1330,6 +1335,1891 @@ h1:focus, h2:focus { outline: none; }
 .launcher-tip-close:hover {
   color: #fff;
   background: rgba(255, 255, 255, 0.2);
+}
+
+/* ===== TEENIEPING TURBO RACING ===== */
+.race-hud-badges {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.race-rank-badge {
+  padding: 6px 16px;
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: #1a1a2e;
+  background: linear-gradient(135deg, #ffe082, #ffb300);
+  border-radius: 999px;
+  box-shadow: 0 4px 0 #c68400, 0 6px 16px rgba(255, 179, 0, 0.4);
+  transition: transform 0.2s var(--bounce);
+}
+.race-category-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding: 8px 16px;
+  background: var(--glass);
+  border: 2px solid var(--glass-border);
+  border-radius: 999px;
+  width: fit-content;
+  margin: 0 auto;
+}
+.race-cat-label {
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: #fff;
+  opacity: 0.85;
+}
+.race-cat-btn {
+  padding: 6px 16px;
+  font-size: 0.95rem;
+  font-weight: 700;
+  border-radius: 999px;
+  color: #fff;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  transition: all 0.2s var(--bounce);
+}
+.race-cat-btn:hover {
+  background: rgba(255, 255, 255, 0.18);
+  transform: translateY(-2px);
+}
+.race-cat-btn.active {
+  background: linear-gradient(135deg, #ff758c, #ff7eb3);
+  color: #fff;
+  box-shadow: 0 3px 0 #b83b68, 0 4px 12px rgba(255, 117, 140, 0.4);
+}
+
+.race-arena {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  background: rgba(22, 25, 54, 0.85);
+  border: 2px solid var(--glass-border);
+  border-radius: var(--radius);
+  padding: clamp(14px, 2.5vw, 20px);
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.45);
+}
+.race-progress-track {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(0, 0, 0, 0.35);
+  border-radius: 999px;
+  padding: 6px 14px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+.race-track-flag {
+  font-weight: 800;
+  font-size: 0.85rem;
+  white-space: nowrap;
+  color: #ffd166;
+}
+.race-progress-bar {
+  position: relative;
+  flex: 1;
+  height: 14px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 999px;
+  overflow: visible;
+}
+.race-progress-indicator {
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.9rem;
+  transition: left 0.15s linear;
+  box-shadow: 0 0 8px rgba(0, 0, 0, 0.5);
+}
+.race-progress-indicator.player {
+  background: #ff6b9d;
+  z-index: 5;
+  transform: translate(-50%, -50%) scale(1.3);
+  box-shadow: 0 0 12px #ff6b9d;
+}
+.race-progress-indicator.rival {
+  background: #4a5568;
+  opacity: 0.9;
+}
+
+.race-speedway {
+  position: relative;
+  border-radius: 16px;
+  overflow: hidden;
+  background: linear-gradient(180deg, #18192a 0%, #20233d 50%, #18192a 100%);
+  border: 3px solid #333860;
+  box-shadow: inset 0 0 30px rgba(0, 0, 0, 0.6);
+}
+.race-speedway::before,
+.race-speedway::after {
+  content: '';
+  display: block;
+  height: 8px;
+  width: 100%;
+  background: repeating-linear-gradient(90deg, #ff4757 0, #ff4757 16px, #ffffff 16px, #ffffff 32px);
+}
+.race-lanes {
+  display: flex;
+  flex-direction: column;
+  padding: 4px 0;
+}
+.race-lane {
+  position: relative;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  border-bottom: 2px dashed rgba(255, 255, 255, 0.16);
+  background-image: repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.08) 0, rgba(255, 255, 255, 0.08) 20px, transparent 20px, transparent 40px);
+  background-size: 60px 100%;
+  animation: roadMove 1.2s linear infinite;
+}
+.race-lane:last-child {
+  border-bottom: none;
+}
+.race-lane.boosting {
+  animation-duration: 0.35s;
+  background-color: rgba(255, 107, 157, 0.08);
+}
+@keyframes roadMove {
+  from { background-position-x: 0; }
+  to { background-position-x: -60px; }
+}
+.race-finish-banner {
+  position: absolute;
+  right: 18px;
+  top: 0;
+  bottom: 0;
+  width: 22px;
+  background: repeating-linear-gradient(0deg, #000 0, #000 12px, #fff 12px, #fff 24px);
+  opacity: 0.65;
+  z-index: 2;
+  pointer-events: none;
+  writing-mode: vertical-rl;
+  font-size: 0.75rem;
+  font-weight: 900;
+  color: #fffa65;
+  text-align: center;
+  text-shadow: 0 0 4px #000;
+}
+
+.race-kart {
+  position: absolute;
+  left: 4%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: left 0.15s linear;
+  z-index: 3;
+}
+.kart-body {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 78px;
+  height: 40px;
+  border-radius: 14px 22px 14px 14px;
+  background: var(--kart-color, #ff6b9d);
+  box-shadow: 0 4px 0 rgba(0, 0, 0, 0.35), 0 6px 14px rgba(0, 0, 0, 0.3);
+  border: 2px solid rgba(255, 255, 255, 0.35);
+  animation: kartEngine 0.15s ease-in-out infinite alternate;
+}
+.race-kart.player .kart-body {
+  width: 86px;
+  height: 44px;
+  border: 2.5px solid #ffeaa7;
+  box-shadow: 0 4px 0 rgba(0, 0, 0, 0.4), 0 0 16px var(--kart-color, #ff6b9d);
+}
+@keyframes kartEngine {
+  from { transform: translateY(-1px); }
+  to { transform: translateY(1px); }
+}
+.kart-wheels {
+  position: absolute;
+  width: 100%;
+  bottom: -6px;
+  left: 0;
+  display: flex;
+  justify-content: space-between;
+  padding: 0 8px;
+  pointer-events: none;
+}
+.wheel {
+  width: 13px;
+  height: 13px;
+  background: #111;
+  border-radius: 50%;
+  border: 2px solid #555;
+  box-shadow: inset 0 0 3px #fff;
+  animation: wheelSpin 0.3s linear infinite;
+}
+@keyframes wheelSpin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+.kart-driver {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.15rem;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+  overflow: hidden;
+}
+.kart-driver svg {
+  width: 100%;
+  height: 100%;
+}
+.kart-spoiler {
+  position: absolute;
+  left: -8px;
+  top: 6px;
+  width: 8px;
+  height: 20px;
+  background: #2d3436;
+  border-radius: 4px;
+}
+.kart-exhaust {
+  position: absolute;
+  left: -16px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 1.1rem;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+.race-kart.boosting .kart-exhaust {
+  opacity: 1;
+  animation: flamePulse 0.1s infinite alternate;
+}
+@keyframes flamePulse {
+  from { transform: translateY(-50%) scale(0.9); }
+  to { transform: translateY(-50%) scale(1.4); }
+}
+.kart-tag {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #fff;
+  background: rgba(0, 0, 0, 0.65);
+  padding: 2px 8px;
+  border-radius: 8px;
+  white-space: nowrap;
+}
+
+.race-cockpit {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.race-cockpit-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+.race-nitro-meter {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(0, 0, 0, 0.4);
+  padding: 6px 16px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+.nitro-label {
+  font-weight: 800;
+  font-size: 0.88rem;
+  color: #ff9f43;
+  white-space: nowrap;
+}
+.nitro-bar-track {
+  flex: 1;
+  height: 12px;
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+  overflow: hidden;
+}
+.nitro-bar-fill {
+  height: 100%;
+  width: 100%;
+  background: linear-gradient(90deg, #ff9f43, #ff5252, #ff7675);
+  border-radius: 999px;
+  transition: width 0.1s linear;
+}
+.race-speedo {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  background: rgba(0, 0, 0, 0.4);
+  padding: 4px 16px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+.speedo-val {
+  font-family: var(--font-read);
+  font-size: 1.8rem;
+  font-weight: 800;
+  color: #00f2fe;
+  text-shadow: 0 0 10px rgba(0, 242, 254, 0.6);
+}
+.speedo-unit {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #a5b1c2;
+}
+
+.race-question-card {
+  position: relative;
+  background: var(--glass);
+  border: 2px solid var(--glass-border);
+  border-radius: var(--radius);
+  padding: clamp(14px, 2.5vw, 20px);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+}
+.race-q-top {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.race-q-type-badge {
+  padding: 4px 12px;
+  font-size: 0.88rem;
+  font-weight: 800;
+  color: #1a1a2e;
+  background: #ffd166;
+  border-radius: 999px;
+}
+.race-q-prompt {
+  margin: 0;
+  flex: 1;
+  font-family: var(--font-read);
+  font-size: clamp(1.4rem, 3.2vw, 1.95rem);
+  font-weight: 700;
+  color: #fff;
+}
+.race-choices {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 12px;
+}
+.race-choice-btn {
+  padding: 14px 18px;
+  font-family: var(--font-read);
+  font-size: clamp(1.3rem, 2.8vw, 1.7rem);
+  font-weight: 700;
+  color: var(--ink);
+  border-radius: 18px;
+  background: linear-gradient(180deg, #ffffff, #edf2f7);
+  box-shadow: 0 6px 0 #cbd5e0;
+  text-align: center;
+  transition: transform 0.15s var(--bounce), background 0.2s, box-shadow 0.15s;
+}
+.race-choice-btn:hover:not(:disabled) {
+  transform: translateY(-3px) scale(1.03);
+  background: #fff;
+}
+.race-choice-btn:active:not(:disabled) {
+  transform: translateY(2px);
+  box-shadow: 0 2px 0 #cbd5e0;
+}
+.race-choice-btn.correct {
+  background: linear-gradient(180deg, #bbf7d0, #4ade80);
+  box-shadow: 0 6px 0 #16a34a;
+  animation: pop 0.4s var(--bounce);
+}
+.race-choice-btn.wrong {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.race-boost-banner {
+  padding: 10px 18px;
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: #fff;
+  background: linear-gradient(135deg, #ff416c, #ff4b2b);
+  border-radius: 14px;
+  text-align: center;
+  box-shadow: 0 4px 16px rgba(255, 75, 43, 0.4);
+  animation: pop 0.35s var(--bounce);
+}
+.race-boost-banner.super {
+  background: linear-gradient(135deg, #f093fb, #f5576c);
+  box-shadow: 0 4px 20px rgba(245, 87, 108, 0.5);
+}
+.race-boost-banner.turbo {
+  background: linear-gradient(135deg, #00c6ff, #0072ff);
+  box-shadow: 0 4px 20px rgba(0, 114, 255, 0.5);
+}
+.race-boost-banner.normal {
+  background: linear-gradient(135deg, #10b981, #059669);
+  box-shadow: 0 4px 16px rgba(16, 185, 129, 0.4);
+}
+.race-boost-banner.miss {
+  background: linear-gradient(135deg, #636e72, #2d3436);
+}
+
+/* ===== Teenieping Magic Blocks (Tetris) ===== */
+.tetris-hud-badges {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.tetris-lines-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  background: linear-gradient(135deg, #6366f1, #a855f7);
+  color: #fff;
+  font-weight: 700;
+  font-size: 1.15rem;
+  border-radius: 999px;
+  box-shadow: 0 4px 14px rgba(99, 102, 241, 0.4);
+}
+.tetris-cat-btn.active {
+  background: linear-gradient(135deg, #818cf8, #c084fc);
+  color: #fff;
+  box-shadow: 0 4px 14px rgba(129, 140, 248, 0.4);
+}
+.tetris-arena {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 20px;
+  align-items: start;
+}
+@media (min-width: 820px) {
+  .tetris-arena {
+    grid-template-columns: minmax(280px, 340px) 1fr;
+    gap: 28px;
+  }
+}
+.tetris-board-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+.tetris-board-frame {
+  position: relative;
+  width: 100%;
+  max-width: 320px;
+  aspect-ratio: 10 / 14;
+  background: rgba(15, 23, 42, 0.85);
+  border: 3px solid rgba(168, 85, 247, 0.45);
+  border-radius: 18px;
+  padding: 6px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6), inset 0 0 30px rgba(147, 51, 234, 0.15);
+  backdrop-filter: blur(12px);
+  overflow: hidden;
+}
+.tetris-danger-line {
+  position: absolute;
+  top: calc(100% / 14 + 6px);
+  left: 6px;
+  right: 6px;
+  height: 2px;
+  background: repeating-linear-gradient(90deg, #ef4444, #ef4444 8px, transparent 8px, transparent 16px);
+  z-index: 10;
+  opacity: 0.6;
+}
+.tetris-grid {
+  display: grid;
+  grid-template-columns: repeat(10, 1fr);
+  grid-template-rows: repeat(14, 1fr);
+  width: 100%;
+  height: 100%;
+  gap: 2px;
+}
+.tetris-cell {
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.03);
+  position: relative;
+  transition: transform 0.2s, background-color 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  overflow: hidden;
+}
+.tetris-cell.filled {
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  box-shadow: inset 0 2px 4px rgba(255, 255, 255, 0.5), 0 2px 8px var(--cell-glow, rgba(255, 255, 255, 0.3));
+}
+.tetris-cell.clearing {
+  animation: lineClearSparkle 0.5s ease-out forwards;
+}
+@keyframes lineClearSparkle {
+  0% { transform: scale(1); filter: brightness(2) drop-shadow(0 0 10px #fff); }
+  50% { transform: scale(1.15); filter: brightness(3); opacity: 1; }
+  100% { transform: scale(0.1); opacity: 0; }
+}
+.tetris-cell.dropped {
+  animation: pop 0.25s var(--bounce);
+}
+.tetris-board-footer {
+  text-align: center;
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--sky);
+}
+.tetris-cockpit {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.tetris-status-panel {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px 20px;
+  background: var(--glass);
+  border: 2px solid var(--glass-border);
+  border-radius: var(--radius);
+  backdrop-filter: blur(10px);
+}
+.tetris-piece-preview {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+.preview-label {
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: #c084fc;
+}
+.preview-box {
+  width: 76px;
+  height: 52px;
+  display: grid;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.35);
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  padding: 4px;
+}
+.preview-grid {
+  display: grid;
+  gap: 2px;
+}
+.preview-cell {
+  width: 14px;
+  height: 14px;
+  border-radius: 3px;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+}
+.preview-fairy-name {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #fff;
+}
+.tetris-score-card {
+  display: flex;
+  gap: 12px;
+}
+.stat-pill {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: rgba(0, 0, 0, 0.3);
+  padding: 8px 16px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  min-width: 72px;
+}
+.stat-lbl {
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  color: #94a3b8;
+}
+.stat-val {
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: #ffd166;
+}
+.tetris-question-card {
+  margin-top: 0;
+}
+.tetris-spell-banner {
+  margin-top: 10px;
+}
+
+/* ===== Teenieping City Hero: World Tour ===== */
+.city-hub-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.city-hub-subtitle {
+  margin: -10px 0 24px;
+  font-size: 1.15rem;
+  color: var(--sky);
+  max-width: 720px;
+}
+.city-passport-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 20px;
+}
+.city-passport-card {
+  position: relative;
+  background: var(--glass);
+  border: 2px solid var(--glass-border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  backdrop-filter: blur(12px);
+  cursor: pointer;
+  transition: transform 0.2s var(--bounce), border-color 0.2s, box-shadow 0.2s;
+}
+.city-passport-card:hover {
+  transform: translateY(-6px) scale(1.02);
+  border-color: rgba(255, 255, 255, 0.4);
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.4);
+}
+.city-card-header {
+  padding: 24px 20px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: relative;
+}
+.city-card-flag-badge {
+  font-size: 2.5rem;
+}
+.city-card-icon {
+  font-size: 3.2rem;
+  filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.3));
+}
+.city-card-body {
+  padding: 0 20px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.city-card-name {
+  margin: 0;
+  font-size: 1.8rem;
+  font-weight: 800;
+  color: #fff;
+}
+.city-card-country {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #94a3b8;
+}
+.city-card-footer {
+  margin-top: auto;
+  padding: 12px 20px;
+  background: rgba(0, 0, 0, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+.city-card-progress {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #ffd166;
+}
+.city-card-btn {
+  font-weight: 700;
+  font-size: 0.95rem;
+}
+.city-card-stamp {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  padding: 4px 10px;
+  border: 2px dashed #10b981;
+  color: #10b981;
+  font-weight: 800;
+  font-size: 0.85rem;
+  border-radius: 8px;
+  transform: rotate(12deg);
+  background: rgba(16, 185, 129, 0.15);
+}
+
+/* Tour Itinerary Stepper */
+.city-tour-hud {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.city-tour-stepper {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 20px;
+  padding: 12px 18px;
+  background: var(--glass);
+  border: 2px solid var(--glass-border);
+  border-radius: 20px;
+  overflow-x: auto;
+}
+.tour-step-node {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  font-size: 0.95rem;
+  font-weight: 700;
+  background: rgba(255, 255, 255, 0.05);
+  color: #94a3b8;
+  white-space: nowrap;
+  transition: all 0.2s;
+}
+.tour-step-node.active {
+  background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+}
+.tour-step-node.completed {
+  background: rgba(16, 185, 129, 0.2);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.4);
+}
+
+/* Stop Arena Layout */
+.city-stop-arena {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 20px;
+}
+@media (min-width: 820px) {
+  .city-stop-arena {
+    grid-template-columns: minmax(320px, 420px) 1fr;
+    gap: 28px;
+  }
+}
+.city-stop-card {
+  background: var(--glass);
+  border: 2px solid var(--glass-border);
+  border-radius: var(--radius);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  backdrop-filter: blur(12px);
+}
+.city-stop-badge {
+  align-self: flex-start;
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-size: 0.9rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, #f59e0b, #ef4444);
+  color: #fff;
+  box-shadow: 0 4px 10px rgba(245, 158, 11, 0.35);
+}
+.city-stop-banner {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  padding: 16px;
+  border-radius: 16px;
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+.city-stop-icon {
+  font-size: 3.5rem;
+  flex-shrink: 0;
+  animation: float 4s ease-in-out infinite;
+}
+.city-stop-info h3 {
+  margin: 0 0 6px;
+  font-size: 1.5rem;
+  color: #fff;
+}
+.city-stop-info p {
+  margin: 0;
+  font-size: 1rem;
+  line-height: 1.4;
+  color: #e2e8f0;
+}
+.city-reward-preview {
+  padding: 14px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px dashed rgba(255, 255, 255, 0.25);
+  border-radius: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.reward-preview-label {
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  color: #a7f3d0;
+}
+.reward-preview-pill {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 1.15rem;
+  color: #fff;
+}
+.reward-preview-pill span {
+  font-size: 1.8rem;
+}
+.city-puzzle-card {
+  margin-top: 0;
+}
+.city-puzzle-card .race-q-top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.city-puzzle-card .race-q-type-badge {
+  order: 1;
+}
+.city-puzzle-card .read-btn {
+  order: 2;
+}
+.city-puzzle-card .race-q-prompt {
+  order: 3;
+  width: 100%;
+  font-size: clamp(1.15rem, 2.2vw, 1.45rem);
+  line-height: 1.6;
+  white-space: pre-line;
+}
+
+/* Hero Backpack / Scrapbook Dialog */
+.hero-backpack-dialog {
+  border: 2px solid var(--glass-border);
+  border-radius: var(--radius);
+  background: rgba(15, 23, 42, 0.95);
+  color: #fff;
+  max-width: 680px;
+  width: 90vw;
+  padding: 24px;
+  backdrop-filter: blur(16px);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.75);
+}
+.backpack-tabs {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+.backpack-tab-btn.active {
+  background: linear-gradient(135deg, #10b981, #06b6d4);
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+}
+.backpack-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  gap: 14px;
+  max-height: 380px;
+  overflow-y: auto;
+  padding: 4px;
+}
+.backpack-item-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 6px;
+  padding: 14px 10px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 16px;
+  transition: transform 0.2s var(--bounce);
+}
+.backpack-item-card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+.backpack-item-icon {
+  font-size: 2.4rem;
+}
+.backpack-item-name {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #fff;
+  line-height: 1.2;
+}
+.backpack-item-city {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #94a3b8;
+}
+.backpack-empty-msg {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 30px 10px;
+  color: #94a3b8;
+  font-size: 1.1rem;
+}
+
+/* ===== Realism Upgrades Across All Games ===== */
+
+/* 1. Math Missions: Notebook Grid Texture & Carry / Borrow Scratchpad */
+.column-sum {
+  background:
+    linear-gradient(90deg, rgba(110, 200, 255, 0.08) 1px, transparent 1px),
+    linear-gradient(180deg, rgba(110, 200, 255, 0.08) 1px, transparent 1px),
+    rgba(15, 21, 68, 0.72);
+  background-size: 28px 28px;
+  box-shadow: inset 0 2px 12px rgba(0, 0, 0, 0.45), 0 12px 30px rgba(0, 0, 0, 0.35);
+}
+.col-carry {
+  display: grid;
+  grid-template-columns: 1fr repeat(var(--cols, 2), 1.3em);
+  gap: 10px;
+  text-align: center;
+  align-items: center;
+  margin-bottom: -2px;
+}
+.carry-lbl {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.55);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.carry-box {
+  height: 30px;
+  border-radius: 8px;
+  border: 2px dashed rgba(255, 209, 102, 0.45);
+  background: rgba(255, 209, 102, 0.08);
+  color: var(--sun);
+  font-size: 0.95rem;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  transition: transform 0.15s var(--bounce), background 0.15s, border-color 0.15s;
+}
+.carry-box:hover {
+  background: rgba(255, 209, 102, 0.18);
+  border-color: var(--sun);
+  transform: translateY(-1px);
+}
+.carry-box.marked {
+  background: var(--sun);
+  color: var(--ink);
+  border-style: solid;
+  border-color: #d9a233;
+  box-shadow: 0 3px 0 #b8841e;
+  animation: pop 0.25s var(--bounce);
+}
+.carry-spacer {
+  height: 30px;
+}
+
+/* 2. Story Time: Hardcover Storybook Texture & Page Spine */
+.article-paper {
+  position: relative;
+  background:
+    linear-gradient(90deg, rgba(43, 35, 80, 0.09) 0%, rgba(43, 35, 80, 0.02) 4%, transparent 9%),
+    repeating-linear-gradient(180deg, transparent 0px, transparent 35px, rgba(110, 140, 200, 0.11) 35px, rgba(110, 140, 200, 0.11) 36px),
+    var(--paper);
+  border-left: 8px solid color-mix(in srgb, var(--story-accent, var(--coral)) 85%, #1a1033);
+}
+
+/* 3. Turbo Racing: Starting Lights Gantry, Parallax Scenery, Telemetry & Karts */
+.race-track-container {
+  position: relative;
+}
+.race-start-gantry {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding: 8px 18px;
+  margin-bottom: 8px;
+  background: linear-gradient(180deg, #1f2437, #121521);
+  border: 2px solid #3d4666;
+  border-radius: 14px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  transition: opacity 0.35s ease, transform 0.35s ease;
+}
+.race-start-gantry.lights-out {
+  opacity: 0.72;
+}
+.gantry-lights {
+  display: flex;
+  gap: 10px;
+  padding: 4px 10px;
+  background: #090b12;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+.gantry-bulb {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #252a3a;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.8);
+  transition: background 0.12s, box-shadow 0.12s, transform 0.12s;
+}
+.gantry-bulb.red {
+  background: #ff3b30;
+  box-shadow: 0 0 14px #ff3b30, inset 0 2px 3px rgba(255, 255, 255, 0.65);
+  transform: scale(1.1);
+}
+.gantry-bulb.amber {
+  background: #ffcc00;
+  box-shadow: 0 0 14px #ffcc00, inset 0 2px 3px rgba(255, 255, 255, 0.65);
+  transform: scale(1.1);
+}
+.gantry-bulb.green {
+  background: #34c759;
+  box-shadow: 0 0 16px #34c759, inset 0 2px 3px rgba(255, 255, 255, 0.75);
+  transform: scale(1.14);
+}
+.gantry-status {
+  font-size: 0.88rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  color: #f8fafc;
+  text-shadow: 0 0 8px rgba(52, 199, 89, 0.5);
+}
+
+.race-scenery-strip {
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  height: 28px;
+  padding: 0 12px;
+  background: linear-gradient(180deg, #0f172a 0%, #1e293b 100%);
+  border-bottom: 2px solid rgba(255, 255, 255, 0.12);
+  font-size: 0.95rem;
+  overflow: hidden;
+  user-select: none;
+  will-change: background-position;
+}
+.scenery-item {
+  opacity: 0.85;
+  filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.5));
+}
+.scenery-marker {
+  font-size: 0.7rem;
+  font-weight: 800;
+  color: #38bdf8;
+  background: rgba(15, 23, 42, 0.85);
+  border: 1px solid rgba(56, 189, 248, 0.45);
+  padding: 1px 6px;
+  border-radius: 6px;
+  letter-spacing: 0.04em;
+}
+
+.lane-number-watermark {
+  position: absolute;
+  left: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 1.45rem;
+  font-weight: 900;
+  color: rgba(255, 255, 255, 0.09);
+  letter-spacing: 0.08em;
+  pointer-events: none;
+  user-select: none;
+}
+
+.wheel {
+  animation-duration: var(--wheel-dur, 0.3s);
+}
+.kart-num-decal {
+  position: absolute;
+  left: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.92);
+  color: #111827;
+  font-size: 0.68rem;
+  font-weight: 900;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
+}
+.kart-windshield {
+  position: absolute;
+  right: 12px;
+  top: 5px;
+  width: 10px;
+  height: 18px;
+  border-radius: 4px 10px 4px 2px;
+  background: linear-gradient(135deg, rgba(186, 230, 253, 0.9), rgba(56, 189, 248, 0.45));
+  border: 1px solid rgba(255, 255, 255, 0.65);
+  transform: skewX(-14deg);
+  pointer-events: none;
+}
+.kart-nose {
+  position: absolute;
+  right: -6px;
+  bottom: 5px;
+  width: 10px;
+  height: 14px;
+  border-radius: 2px 8px 6px 2px;
+  background: rgba(255, 255, 255, 0.32);
+  border-right: 2px solid rgba(255, 255, 255, 0.75);
+  pointer-events: none;
+}
+.kart-smoke {
+  position: absolute;
+  left: -26px;
+  bottom: 2px;
+  font-size: 0.95rem;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s;
+}
+.race-kart.boosting .kart-smoke,
+.race-kart.super-boosting .kart-smoke {
+  opacity: 0.85;
+  animation: smokePuff 0.35s ease-out infinite;
+}
+.race-kart.super-boosting .kart-body {
+  box-shadow: 0 4px 0 rgba(0, 0, 0, 0.4), 0 0 24px #38bdf8, 0 0 40px #f43f5e;
+}
+.race-kart.slipping {
+  animation: kartSpinWobble 0.45s ease-in-out;
+}
+@keyframes smokePuff {
+  0% { transform: translate(0, 0) scale(0.75); opacity: 0.85; }
+  100% { transform: translate(-14px, -6px) scale(1.25); opacity: 0; }
+}
+@keyframes kartSpinWobble {
+  0%, 100% { transform: rotate(0deg); }
+  25% { transform: rotate(-8deg) translateY(-3px); }
+  75% { transform: rotate(7deg) translateY(3px); }
+}
+
+.race-telemetry-cluster {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.telemetry-pill {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(9, 13, 28, 0.75);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  padding: 5px 11px;
+  border-radius: 12px;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.5);
+}
+.telemetry-lbl {
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  color: #94a3b8;
+}
+.telemetry-val {
+  font-family: var(--font-read);
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: #f8fafc;
+}
+.gear-pill .telemetry-val {
+  color: #ffd166;
+  font-size: 1.1rem;
+  background: rgba(255, 209, 102, 0.14);
+  padding: 1px 7px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 209, 102, 0.35);
+}
+.rpm-pill {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 3px;
+  min-width: 105px;
+}
+.rpm-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 6px;
+}
+.rpm-bar-track {
+  height: 6px;
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+  overflow: hidden;
+}
+.rpm-bar-fill {
+  height: 100%;
+  width: 25%;
+  background: linear-gradient(90deg, #22c55e 0%, #eab308 65%, #ef4444 100%);
+  border-radius: 999px;
+  transition: width 0.12s linear;
+}
+.telemetry-pill.drafting-active {
+  border-color: #38bdf8;
+  background: rgba(14, 116, 144, 0.45);
+  box-shadow: 0 0 12px rgba(56, 189, 248, 0.4);
+}
+.telemetry-pill.drafting-active .telemetry-val {
+  color: #7dd3fc;
+}
+
+/* 4. Magic Blocks (Tetris): 3D Beveled Gems, Active/Ghost Projection & Arcade Controls */
+.tetris-grid {
+  background-image:
+    linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+}
+.tetris-cell.filled {
+  border-top: 2px solid rgba(255, 255, 255, 0.8);
+  border-left: 2px solid rgba(255, 255, 255, 0.65);
+  border-right: 2px solid rgba(0, 0, 0, 0.35);
+  border-bottom: 3px solid rgba(0, 0, 0, 0.48);
+  box-shadow: inset 0 2px 3px rgba(255, 255, 255, 0.45), 0 2px 8px var(--cell-glow, rgba(255, 255, 255, 0.25));
+}
+.tetris-cell.active-piece {
+  z-index: 3;
+  filter: brightness(1.08);
+  box-shadow: 0 0 10px var(--cell-glow, rgba(255, 255, 255, 0.55)), inset 0 2px 4px rgba(255, 255, 255, 0.6);
+}
+.tetris-cell.ghost {
+  background: color-mix(in srgb, var(--ghost-color, #a855f7) 20%, transparent);
+  border: 1.5px dashed var(--ghost-color, rgba(255, 255, 255, 0.55));
+  box-shadow: inset 0 0 6px color-mix(in srgb, var(--ghost-color, #a855f7) 35%, transparent);
+}
+.tetris-cell.drop-trail {
+  background: linear-gradient(180deg, transparent, color-mix(in srgb, var(--trail-color, #fff) 45%, transparent));
+  animation: trailFade 0.38s ease-out forwards;
+}
+@keyframes trailFade {
+  from { opacity: 0.85; transform: scaleY(1.05); }
+  to { opacity: 0; transform: scaleY(0.85); }
+}
+.gem-facet {
+  font-size: 0.68rem;
+  line-height: 1;
+  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.4));
+  pointer-events: none;
+}
+.tetris-callout {
+  position: absolute;
+  top: 42%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 15;
+  padding: 8px 16px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #f59e0b, #ec4899);
+  color: #fff;
+  font-weight: 900;
+  font-size: 1rem;
+  white-space: nowrap;
+  box-shadow: 0 8px 24px rgba(236, 72, 153, 0.55);
+  animation: calloutPop 0.9s var(--bounce) forwards;
+  pointer-events: none;
+}
+@keyframes calloutPop {
+  0% { opacity: 0; transform: translate(-50%, -20%) scale(0.7); }
+  25% { opacity: 1; transform: translate(-50%, -50%) scale(1.1); }
+  80% { opacity: 1; transform: translate(-50%, -65%) scale(1); }
+  100% { opacity: 0; transform: translate(-50%, -85%) scale(0.9); }
+}
+.tetris-arcade-controls {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  width: 100%;
+  max-width: 320px;
+}
+.arcade-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  padding: 8px 6px;
+  border-radius: 14px;
+  background: linear-gradient(180deg, #334155, #1e293b);
+  border: 1.5px solid rgba(255, 255, 255, 0.2);
+  color: #f8fafc;
+  font-size: 1.1rem;
+  font-weight: 800;
+  box-shadow: 0 4px 0 #0f172a, 0 6px 14px rgba(0, 0, 0, 0.35);
+  transition: transform 0.1s, box-shadow 0.1s, background 0.15s;
+}
+.arcade-btn span {
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: #cbd5e1;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.arcade-btn:hover {
+  background: linear-gradient(180deg, #475569, #334155);
+  transform: translateY(-1px);
+}
+.arcade-btn:active {
+  transform: translateY(3px);
+  box-shadow: 0 1px 0 #0f172a;
+}
+.arcade-btn-rotate {
+  background: linear-gradient(180deg, #7c3aed, #5b21b6);
+  box-shadow: 0 4px 0 #3b0764, 0 6px 14px rgba(124, 58, 237, 0.35);
+}
+.arcade-btn-rotate:hover {
+  background: linear-gradient(180deg, #8b5cf6, #6d28d9);
+}
+
+/* 5. City Hero: Boarding Pass Strip, Panoramic Landmark Diorama & Market Receipt Tray */
+.city-boarding-line {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 6px;
+  padding-top: 8px;
+  border-top: 1px dashed rgba(255, 255, 255, 0.18);
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  color: #38bdf8;
+}
+.city-flight-strip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 10px 18px;
+  margin-bottom: 14px;
+  background: linear-gradient(90deg, rgba(15, 23, 42, 0.88), rgba(30, 41, 59, 0.88));
+  border: 1.5px solid rgba(56, 189, 248, 0.35);
+  border-left: 6px solid #38bdf8;
+  border-radius: 14px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.3);
+}
+.flight-pill {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #e2e8f0;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.flight-pill strong {
+  color: #ffd166;
+  letter-spacing: 0.05em;
+}
+.city-stop-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.city-camera-tag {
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  color: #94a3b8;
+  background: rgba(0, 0, 0, 0.35);
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+.city-stop-diorama {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border-radius: 16px;
+  overflow: hidden;
+  border: 2px solid rgba(255, 255, 255, 0.22);
+  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.45);
+  background: #0f172a;
+}
+.city-diorama-svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+.city-stop-diorama.camera-flash::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: #fff;
+  animation: cameraShutterFlash 0.55s ease-out forwards;
+  pointer-events: none;
+}
+@keyframes cameraShutterFlash {
+  0% { opacity: 0.95; }
+  100% { opacity: 0; }
+}
+.reward-preview-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.reward-preview-text small {
+  font-size: 0.8rem;
+  color: #cbd5e1;
+  font-weight: 600;
+}
+
+.city-market-tray {
+  padding: 12px 16px;
+  border-radius: 14px;
+  background: linear-gradient(180deg, rgba(255, 253, 245, 0.96), rgba(254, 243, 199, 0.94));
+  color: #1e293b;
+  border: 2px dashed #d97706;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25);
+}
+.market-receipt-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.receipt-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+.receipt-lbl {
+  font-size: 0.7rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #64748b;
+}
+.receipt-val {
+  font-family: var(--font-read);
+  font-size: 1.25rem;
+  font-weight: 900;
+  color: #0f172a;
+}
+.coin-row {
+  font-size: 1rem;
+  letter-spacing: 1px;
+}
+.receipt-op,
+.receipt-eq {
+  font-size: 1.4rem;
+  font-weight: 900;
+  color: #d97706;
+}
+.receipt-total .receipt-val {
+  color: #d97706;
+  background: rgba(245, 158, 11, 0.18);
+  padding: 2px 10px;
+  border-radius: 8px;
+}
+
+/* 6. Sweet Bakery & Patisserie: Cafe Order Ticket, SVG Kitchen Stage & Display Case */
+.bakery-orders-badge {
+  background: linear-gradient(135deg, #ec4899, #f59e0b);
+  box-shadow: 0 4px 14px rgba(236, 72, 153, 0.4);
+}
+.bakery-cat-btn.active {
+  background: linear-gradient(135deg, #ec4899, #f472b6);
+  color: #fff;
+  box-shadow: 0 4px 14px rgba(236, 72, 153, 0.4);
+}
+.bakery-arena {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 20px;
+  align-items: start;
+}
+@media (min-width: 820px) {
+  .bakery-arena {
+    grid-template-columns: minmax(330px, 440px) 1fr;
+    gap: 26px;
+  }
+}
+.bakery-kitchen-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.bakery-order-ticket {
+  background: linear-gradient(180deg, #fffdf9, #fef3c7);
+  color: #1e293b;
+  border-radius: 18px;
+  border: 2px dashed #f59e0b;
+  padding: 14px 16px;
+  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.35);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.ticket-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding-bottom: 8px;
+  border-bottom: 1.5px dashed rgba(217, 119, 6, 0.35);
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+.ticket-no {
+  background: #1e293b;
+  color: #fde047;
+  padding: 2px 8px;
+  border-radius: 6px;
+  letter-spacing: 0.05em;
+}
+.ticket-customer {
+  color: #be185d;
+  font-size: 0.9rem;
+}
+.ticket-price {
+  background: rgba(245, 158, 11, 0.2);
+  color: #b45309;
+  padding: 2px 8px;
+  border-radius: 999px;
+}
+.ticket-title-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.ticket-dessert-icon {
+  font-size: 2.7rem;
+  filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.2));
+}
+.ticket-dessert-name {
+  margin: 0 0 2px;
+  font-size: 1.3rem;
+  font-weight: 800;
+  color: #0f172a;
+}
+.ticket-dessert-desc {
+  margin: 0;
+  font-size: 0.88rem;
+  color: #475569;
+  line-height: 1.3;
+}
+.ticket-steps-track {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+}
+.ticket-step {
+  text-align: center;
+  padding: 5px 6px;
+  border-radius: 10px;
+  font-size: 0.78rem;
+  font-weight: 800;
+  background: rgba(15, 23, 42, 0.08);
+  color: #64748b;
+}
+.ticket-step.active {
+  background: linear-gradient(135deg, #ec4899, #f59e0b);
+  color: #fff;
+  box-shadow: 0 3px 10px rgba(236, 72, 153, 0.35);
+}
+.ticket-step.done {
+  background: #dcfce7;
+  color: #15803d;
+  border: 1px solid #86efac;
+}
+
+.bakery-stage-frame {
+  background: var(--glass);
+  border: 2px solid var(--glass-border);
+  border-radius: 20px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
+}
+.bakery-telemetry-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.bakery-station-pill,
+.bakery-oven-pill {
+  font-size: 0.76rem;
+  font-weight: 800;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.75);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #f8fafc;
+}
+.bakery-oven-pill {
+  color: #fde047;
+  border-color: rgba(251, 146, 60, 0.45);
+}
+.bakery-stage-box {
+  width: 100%;
+  border-radius: 14px;
+  overflow: hidden;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+}
+.bakery-stage-svg {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.bakery-showcase {
+  background: var(--glass);
+  border: 2px solid var(--glass-border);
+  border-radius: 18px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.showcase-label {
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  color: #f9a8d4;
+}
+.showcase-shelf {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  min-height: 44px;
+  align-items: center;
+}
+.showcase-empty {
+  font-size: 0.88rem;
+  color: #94a3b8;
+  font-style: italic;
+}
+.showcase-pastry-pill {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(244, 114, 182, 0.45);
+  animation: pop 0.35s var(--bounce);
+}
+.pastry-pill-icon {
+  font-size: 1.6rem;
+}
+.pastry-pill-meta {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.15;
+}
+.pastry-pill-meta b {
+  font-size: 0.85rem;
+  color: #fff;
+}
+.pastry-pill-meta small {
+  font-size: 0.72rem;
+  color: #fde047;
+}
+
+/* ===== Super Jump Run (Mario-style Platformer) ===== */
+.platformer-flag-badge {
+  background: linear-gradient(135deg, #ef4444, #b91c1c);
+  border-color: #fde047;
+}
+.platformer-cat-btn.active {
+  background: linear-gradient(135deg, #ef4444, #f59e0b);
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.45);
+}
+.mario-hud-bar {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  padding: 10px 14px;
+  border-radius: 14px;
+  background: linear-gradient(180deg, #1e1b4b, #0f172a);
+  border: 2px solid #fbbf24;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
+}
+.mario-hud-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  line-height: 1.25;
+}
+.mario-hud-lbl {
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: #fde047;
+}
+.mario-hud-val {
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: #ffffff;
+  font-variant-numeric: tabular-nums;
+}
+.platformer-stage-frame {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px;
+  border-radius: 18px;
+  background: rgba(15, 23, 42, 0.55);
+  border: 2px solid rgba(251, 191, 36, 0.4);
+  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.3);
+}
+.platformer-stage-box {
+  width: 100%;
+  border-radius: 14px;
+  overflow: hidden;
+  border: 3px solid #fbbf24;
+  box-shadow: inset 0 0 18px rgba(0, 0, 0, 0.25);
+}
+.mario-stage-svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.mario-cloud-drift {
+  animation: float 6s ease-in-out infinite;
+}
+.mario-q-pulse {
+  animation: pulseGlow 1.4s ease-in-out infinite;
+}
+.mario-coin-pop {
+  animation: pop 0.45s var(--bounce);
+}
+.mario-hero-jump {
+  animation: bounceHero 0.45s var(--bounce);
+}
+.mario-hero-bump {
+  animation: shake 0.4s ease-in-out;
+}
+@keyframes bounceHero {
+  0% { transform: translateY(0); }
+  50% { transform: translateY(-18px) scale(1.06); }
+  100% { transform: translateY(0); }
+}
+.platformer-course-track {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  gap: 6px;
+}
+.course-node {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 4px;
+  border-radius: 10px;
+  background: rgba(30, 41, 59, 0.75);
+  border: 1.5px solid rgba(148, 163, 184, 0.3);
+  font-size: 0.95rem;
+  transition: transform 0.2s var(--bounce), border-color 0.2s, background 0.2s;
+}
+.course-node small {
+  font-size: 0.65rem;
+  font-weight: 800;
+  color: #cbd5e1;
+}
+.course-node.current {
+  background: linear-gradient(135deg, #f59e0b, #ea580c);
+  border-color: #fde047;
+  transform: scale(1.07);
+  box-shadow: 0 0 12px rgba(251, 191, 36, 0.55);
+}
+.course-node.current small {
+  color: #fff;
+}
+.course-node.cleared {
+  background: rgba(22, 163, 74, 0.35);
+  border-color: #4ade80;
+}
+.platformer-question-card {
+  border-color: rgba(251, 191, 36, 0.55);
+}
+.platformer-block-choices {
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+.mario-q-block {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 16px 14px;
+  border-radius: 14px;
+  background: linear-gradient(180deg, #fde047 0%, #f59e0b 55%, #d97706 100%);
+  border: 3px solid #78350f;
+  box-shadow: 0 6px 0 #78350f, 0 10px 18px rgba(0, 0, 0, 0.28);
+  color: #451a03;
+  font-size: clamp(1.15rem, 2.8vw, 1.45rem);
+  font-weight: 800;
+  transition: transform 0.15s var(--bounce), box-shadow 0.15s;
+}
+.mario-q-block:hover:not(:disabled) {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 0 #78350f, 0 14px 24px rgba(245, 158, 11, 0.4);
+}
+.mario-q-block:active:not(:disabled) {
+  transform: translateY(3px);
+  box-shadow: 0 2px 0 #78350f;
+}
+.q-block-rivets {
+  font-size: 0.85rem;
+  font-weight: 900;
+  color: #92400e;
+  background: rgba(255, 255, 255, 0.45);
+  padding: 2px 6px;
+  border-radius: 6px;
+}
+.q-block-val {
+  color: #1c1917;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.65);
+}
+.mario-q-block.correct {
+  background: linear-gradient(180deg, #4ade80, #16a34a);
+  border-color: #14532d;
+  box-shadow: 0 6px 0 #14532d;
+  color: #fff;
+}
+.mario-q-block.correct .q-block-val {
+  color: #fff;
+  text-shadow: none;
+}
+.mario-q-block.wrong {
+  background: linear-gradient(180deg, #f87171, #dc2626);
+  border-color: #7f1d1d;
+  box-shadow: 0 6px 0 #7f1d1d;
+  color: #fff;
 }
 
 /* ===== Reduced motion ===== */

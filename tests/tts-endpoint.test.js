@@ -62,9 +62,12 @@ function findPythonCmd() {
     }
   }
 
-  // Fallback to whichever python exists
+  // Fallback to whichever python is actually executable
   for (const cmd of candidates) {
-    if (fs.existsSync(cmd)) return cmd;
+    try {
+      const check = spawnSync(cmd, ['-c', 'import sys'], { stdio: 'ignore' });
+      if (check.status === 0) return cmd;
+    } catch (_) {}
   }
   return 'python3';
 }

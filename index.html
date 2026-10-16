@@ -10,7 +10,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Andika:wght@400;700&family=Fredoka:wght@500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/styles.css?v=2">
+  <link rel="stylesheet" href="css/styles.css?v=10">
 </head>
 <body>
   <div class="sky" aria-hidden="true"></div>
@@ -56,7 +56,7 @@
     </aside>
 
     <!-- HOME -->
-    <section class="screen" data-screen="home" aria-labelledby="home-title">
+    <section class="screen" data-screen="home" id="screen-home" aria-labelledby="home-title">
       <header class="home-header">
         <h1 id="home-title" tabindex="-1">Teenieping <span>Magic Academy</span></h1>
         <div class="star-badge" aria-label="Stars collected"><span aria-hidden="true">⭐</span><b class="js-stars">0</b></div>
@@ -106,6 +106,31 @@
           <span class="mode-icon" aria-hidden="true">📚</span>
           <span class="mode-title">Story Time</span>
           <span class="mode-sub">Read stories &amp; fill in words</span>
+        </button>
+        <button class="mode-card mode-race" id="btn-race" data-say="Turbo Racing">
+          <span class="mode-icon" aria-hidden="true">🏎️</span>
+          <span class="mode-title">Turbo Racing</span>
+          <span class="mode-sub">Fast answers boost your kart!</span>
+        </button>
+        <button class="mode-card mode-tetris" id="btn-tetris" data-say="Magic Blocks">
+          <span class="mode-icon" aria-hidden="true">🧩</span>
+          <span class="mode-title">Magic Blocks</span>
+          <span class="mode-sub">Answer to drop &amp; clear rows!</span>
+        </button>
+        <button class="mode-card mode-city-hero" id="btn-city-hero" data-say="City Hero">
+          <span class="mode-icon" aria-hidden="true">🏙️</span>
+          <span class="mode-title">City Hero</span>
+          <span class="mode-sub">Explore cities, food &amp; souvenirs!</span>
+        </button>
+        <button class="mode-card mode-bakery" id="btn-bakery" data-say="Sweet Bakery">
+          <span class="mode-icon" aria-hidden="true">🍰</span>
+          <span class="mode-title">Sweet Bakery</span>
+          <span class="mode-sub">Bake cakes with math &amp; recipes!</span>
+        </button>
+        <button class="mode-card mode-platformer" id="btn-platformer" data-say="Super Jump Run">
+          <span class="mode-icon" aria-hidden="true">🍄</span>
+          <span class="mode-title">Super Jump Run</span>
+          <span class="mode-sub">Bonk [?] blocks &amp; jump pipes!</span>
         </button>
       </div>
 
@@ -218,6 +243,408 @@
         </div>
       </div>
     </section>
+
+    <!-- TEENIEPING TURBO RACING -->
+    <section class="screen" data-screen="race" id="screen-race" aria-labelledby="race-title" hidden>
+      <header class="topbar">
+        <button class="icon-btn js-home" id="btn-race-back" aria-label="Back to Home">⬅️</button>
+        <h2 id="race-title" tabindex="-1">Turbo Racing 🏎️💨</h2>
+        <div class="race-hud-badges">
+          <div class="race-rank-badge" id="race-rank-badge">1st 🥇</div>
+          <div class="star-badge" aria-label="Stars collected"><span aria-hidden="true">⭐</span><b class="js-stars">0</b></div>
+        </div>
+      </header>
+
+      <!-- Category / Division Bar -->
+      <div class="race-category-bar">
+        <span class="race-cat-label">Division:</span>
+        <button class="race-cat-btn active" data-cat="mix" id="btn-cat-mix">⚡ Grand Prix Mix</button>
+        <button class="race-cat-btn" data-cat="math" id="btn-cat-math">🔢 Math Sprint</button>
+        <button class="race-cat-btn" data-cat="reading" id="btn-cat-reading">📖 Reading Sprint</button>
+      </div>
+
+      <!-- Race Track Arena -->
+      <div class="race-arena">
+        <div class="race-progress-track">
+          <div class="race-track-flag start">🚦 START</div>
+          <div class="race-progress-bar" id="race-progress-bar">
+            <div class="race-progress-indicator player" id="race-prog-player" title="Your Kart">💖</div>
+            <div class="race-progress-indicator rival" id="race-prog-rival0" title="Rival 1">⚡</div>
+            <div class="race-progress-indicator rival" id="race-prog-rival1" title="Rival 2">🍀</div>
+            <div class="race-progress-indicator rival" id="race-prog-rival2" title="Rival 3">🎵</div>
+          </div>
+          <div class="race-track-flag finish">🏁 1000m FINISH</div>
+        </div>
+
+        <div class="race-speedway" id="race-speedway">
+          <!-- F1 Starting Grid Traffic Lights Gantry -->
+          <div class="race-start-gantry" id="race-start-gantry" hidden>
+            <div class="gantry-lights">
+              <span class="gantry-bulb" id="race-light-1"></span>
+              <span class="gantry-bulb" id="race-light-2"></span>
+              <span class="gantry-bulb" id="race-light-3"></span>
+            </div>
+            <span class="gantry-status" id="race-gantry-text">READY</span>
+          </div>
+
+          <!-- Parallax Track Scenery & Distance Markers -->
+          <div class="race-scenery-strip" id="race-scenery-strip" aria-hidden="true">
+            <span class="scenery-item">🏟️ GRANDSTAND</span>
+            <span class="scenery-marker">250m</span>
+            <span class="scenery-item">🌲🌲</span>
+            <span class="scenery-marker">500m</span>
+            <span class="scenery-item">🎡 HARMONY PARK</span>
+            <span class="scenery-marker">750m</span>
+            <span class="scenery-item">🏁 FINAL STRETCH</span>
+          </div>
+
+          <div class="race-finish-banner" id="race-finish-banner">FINISH</div>
+          <div class="race-lanes" id="race-lanes"></div>
+          <div class="race-speed-lines" id="race-speed-lines" aria-hidden="true"></div>
+        </div>
+      </div>
+
+      <!-- Racing Cockpit / Question Card -->
+      <div class="race-cockpit">
+        <div class="race-cockpit-header">
+          <div class="race-nitro-meter">
+            <span class="nitro-label">🚀 NITRO BONUS</span>
+            <div class="nitro-bar-track">
+              <div class="nitro-bar-fill" id="nitro-bar-fill"></div>
+            </div>
+          </div>
+
+          <div class="race-telemetry-cluster">
+            <div class="telemetry-pill" title="Current Gear">
+              <span class="telemetry-lbl">GEAR</span>
+              <b class="telemetry-val" id="race-gear-display">G2</b>
+            </div>
+            <div class="telemetry-pill rpm-pill" title="Engine Tachometer">
+              <span class="telemetry-lbl">RPM <b id="race-rpm-val">3800</b></span>
+              <div class="rpm-bar-track">
+                <div class="rpm-bar-fill" id="race-rpm-fill" style="width:45%"></div>
+              </div>
+            </div>
+            <div class="telemetry-pill" title="Distance & Slipstream Status">
+              <span class="telemetry-lbl" id="race-gap-display">LEADING</span>
+              <b class="telemetry-val" id="race-odom-display">0m</b>
+            </div>
+          </div>
+
+          <div class="race-speedo">
+            <span class="speedo-val" id="race-speed-display">35</span>
+            <span class="speedo-unit">km/h</span>
+          </div>
+        </div>
+
+        <div class="race-question-card" id="race-question-card">
+          <div class="race-q-top">
+            <span class="race-q-type-badge" id="race-q-badge">Question</span>
+            <p class="race-q-prompt" id="race-q-prompt">Ready to race?</p>
+            <button class="read-btn" id="btn-race-read" aria-label="Read question">🔊 Read</button>
+          </div>
+          <div class="race-choices" id="race-choices"></div>
+          <div class="race-boost-banner" id="race-boost-banner" hidden></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TEENIEPING MAGIC BLOCKS (TETRIS) -->
+    <section class="screen" data-screen="tetris" id="screen-tetris" aria-labelledby="tetris-title" hidden>
+      <header class="topbar">
+        <button class="icon-btn js-home" id="btn-tetris-back" aria-label="Back to Home">⬅️</button>
+        <h2 id="tetris-title" tabindex="-1">Magic Blocks 🧩✨</h2>
+        <div class="tetris-hud-badges">
+          <div class="tetris-lines-badge" id="tetris-lines-badge">Lines: <b>0</b>/10 🎯</div>
+          <div class="star-badge" aria-label="Stars collected"><span aria-hidden="true">⭐</span><b class="js-stars">0</b></div>
+        </div>
+      </header>
+
+      <!-- Category / Division Bar -->
+      <div class="race-category-bar">
+        <span class="race-cat-label">Division:</span>
+        <button class="race-cat-btn tetris-cat-btn active" data-cat="mix" id="btn-tetris-cat-mix">⚡ Magic Mix</button>
+        <button class="race-cat-btn tetris-cat-btn" data-cat="math" id="btn-tetris-cat-math">🔢 Math Sprint</button>
+        <button class="race-cat-btn tetris-cat-btn" data-cat="reading" id="btn-tetris-cat-reading">📖 Reading Sprint</button>
+      </div>
+
+      <!-- Tetris Play Arena -->
+      <div class="tetris-arena">
+        <!-- Matrix Column -->
+        <div class="tetris-board-panel">
+          <div class="tetris-board-frame">
+            <div class="tetris-danger-line" aria-hidden="true" title="Danger Line"></div>
+            <div class="tetris-callout" id="tetris-callout" hidden></div>
+            <div class="tetris-grid" id="tetris-grid" aria-label="Magic Blocks Grid"></div>
+          </div>
+
+          <!-- Tactile Arcade Deck (Optional manual steering + rotation) -->
+          <div class="tetris-arcade-controls" id="tetris-controls" role="group" aria-label="Block controls">
+            <button class="arcade-btn" id="btn-tetris-left" title="Move Left (Left Arrow)" aria-label="Move piece left">⬅️</button>
+            <button class="arcade-btn" id="btn-tetris-rotate" title="Rotate Gem (Up Arrow)" aria-label="Rotate piece">🔄 Rotate</button>
+            <button class="arcade-btn" id="btn-tetris-down" title="Nudge Down (Down Arrow)" aria-label="Move piece down">⬇️</button>
+            <button class="arcade-btn" id="btn-tetris-right" title="Move Right (Right Arrow)" aria-label="Move piece right">➡️</button>
+          </div>
+
+          <div class="tetris-board-footer">
+            <span class="tetris-fairy-cheer" id="tetris-fairy-cheer">Steer with arrows or answer to cast a magic smart drop! ✨</span>
+          </div>
+        </div>
+
+        <!-- Cockpit Column -->
+        <div class="tetris-cockpit">
+          <!-- Next Piece & Score Panel -->
+          <div class="tetris-status-panel">
+            <div class="tetris-piece-preview">
+              <span class="preview-label">NEXT GEM</span>
+              <div class="preview-box" id="tetris-next-preview"></div>
+              <span class="preview-fairy-name" id="tetris-next-fairy">Heartsping 💖</span>
+            </div>
+            <div class="tetris-score-card">
+              <div class="stat-pill">
+                <span class="stat-lbl">SCORE</span>
+                <b class="stat-val" id="tetris-score-val">0</b>
+              </div>
+              <div class="stat-pill">
+                <span class="stat-lbl">LEVEL</span>
+                <b class="stat-val" id="tetris-level-val">1</b>
+              </div>
+              <div class="stat-pill">
+                <span class="stat-lbl">STREAK</span>
+                <b class="stat-val" id="tetris-streak-val">🔥 0</b>
+              </div>
+            </div>
+          </div>
+
+          <!-- Question Card -->
+          <div class="race-question-card tetris-question-card" id="tetris-question-card">
+            <div class="race-q-top">
+              <span class="race-q-type-badge" id="tetris-q-badge">Question</span>
+              <p class="race-q-prompt" id="tetris-q-prompt">Ready to drop?</p>
+              <button class="read-btn" id="btn-tetris-read" aria-label="Read question">🔊 Read</button>
+            </div>
+            <div class="race-choices" id="tetris-choices"></div>
+            <div class="race-boost-banner tetris-spell-banner" id="tetris-spell-banner" hidden></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TEENIEPING CITY HERO: CITY HUB -->
+    <section class="screen" data-screen="city-hub" id="screen-city-hub" aria-labelledby="city-hub-title" hidden>
+      <header class="topbar">
+        <button class="icon-btn js-home" id="btn-city-hub-home" aria-label="Back to Home">🏠</button>
+        <h2 id="city-hub-title" tabindex="-1">City Hero: World Tour 🌍🦸</h2>
+        <div class="city-hub-header-actions">
+          <button class="chip" id="btn-open-backpack">🎒 Hero Scrapbook</button>
+          <div class="star-badge" aria-label="Stars collected"><span aria-hidden="true">⭐</span><b class="js-stars">0</b></div>
+        </div>
+      </header>
+      <p class="city-hub-subtitle">Choose a world city to board your Teenieping Jet, explore landmarks, buy famous street foods, and collect authentic souvenirs!</p>
+      <div class="city-passport-grid" id="city-passport-grid"></div>
+    </section>
+
+    <!-- TEENIEPING CITY HERO: ACTIVE CITY TOUR -->
+    <section class="screen" data-screen="city-tour" id="screen-city-tour" aria-labelledby="city-tour-title" hidden>
+      <header class="topbar">
+        <button class="icon-btn" id="btn-city-tour-back" aria-label="Back to City Hub">⬅️</button>
+        <h2 id="city-tour-title" tabindex="-1">Tokyo Hero Tour 🗼</h2>
+        <div class="city-tour-hud">
+          <button class="chip" id="btn-tour-backpack">🎒 Scrapbook (<span id="tour-backpack-count">0</span>)</button>
+          <div class="star-badge" aria-label="Stars collected"><span aria-hidden="true">⭐</span><b class="js-stars">0</b></div>
+        </div>
+      </header>
+
+      <!-- Realistic Flight Boarding Pass & Local Weather Strip -->
+      <div class="city-flight-strip" id="city-flight-strip">
+        <span class="flight-pill" id="city-flight-code">✈️ Flight TP-108 • HND</span>
+        <span class="flight-pill" id="city-local-time">🕒 19:30 JST</span>
+        <span class="flight-pill" id="city-local-weather">🌙 18°C Starry Night</span>
+        <span class="flight-pill wallet-pill" id="city-currency-pill">🪙 Currency: Yen</span>
+      </div>
+
+      <!-- Tour Stepper Track -->
+      <div class="city-tour-stepper" id="city-tour-stepper"></div>
+
+      <!-- Active Stop Presentation Card -->
+      <div class="city-stop-arena" id="city-stop-arena">
+        <div class="city-stop-card" id="city-stop-card">
+          <div class="city-stop-card-top">
+            <div class="city-stop-badge" id="city-stop-category">📍 Place of Interest</div>
+            <span class="city-camera-tag" id="city-camera-tag">📸 LIVE VIEW</span>
+          </div>
+
+          <!-- Illustrated Panoramic Stop Diorama -->
+          <div class="city-stop-diorama" id="city-stop-diorama"></div>
+
+          <div class="city-stop-banner" id="city-stop-banner">
+            <span class="city-stop-icon" id="city-stop-icon" aria-hidden="true">🗼</span>
+            <div class="city-stop-info">
+              <h3 id="city-stop-name">Tokyo Tower</h3>
+              <p id="city-stop-fact">Tokyo Tower sparkles with bright golden lights across the night sky!</p>
+            </div>
+          </div>
+
+          <div class="city-reward-preview">
+            <span class="reward-preview-label">REWARD FOR RESOLVING PUZZLE:</span>
+            <div class="reward-preview-pill" id="city-reward-preview-pill">
+              <span id="city-reward-icon">🗼</span>
+              <div class="reward-preview-text">
+                <b id="city-reward-name">Tokyo Tower Model</b>
+                <small id="city-reward-desc">A sparkling red mini-tower for your Hero Scrapbook!</small>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Stop Puzzle Cockpit -->
+        <div class="race-question-card city-puzzle-card" id="city-puzzle-card">
+          <div class="race-q-top">
+            <span class="race-q-type-badge" id="city-q-badge">Puzzle</span>
+            <p class="race-q-prompt" id="city-q-prompt">Read and solve to unlock the stop!</p>
+            <button class="read-btn" id="btn-city-q-read" aria-label="Read question">🔊 Read</button>
+          </div>
+          <!-- Realistic Market Coin/Receipt Tray for Math Stops -->
+          <div class="city-market-tray" id="city-market-tray" hidden></div>
+          <div class="race-choices" id="city-q-choices"></div>
+          <div class="race-boost-banner city-feedback-banner" id="city-feedback-banner" hidden></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TEENIEPING SWEET BAKERY & PATISSERIE -->
+    <section class="screen" data-screen="bakery" id="screen-bakery" aria-labelledby="bakery-title" hidden>
+      <header class="topbar">
+        <button class="icon-btn js-home" id="btn-bakery-back" aria-label="Back to Home">⬅️</button>
+        <h2 id="bakery-title" tabindex="-1">Sweet Bakery 🍰👩‍🍳</h2>
+        <div class="tetris-hud-badges">
+          <div class="tetris-lines-badge bakery-orders-badge" id="bakery-orders-badge">Orders: <b>0</b>/3 🧁</div>
+          <div class="star-badge" aria-label="Stars collected"><span aria-hidden="true">⭐</span><b class="js-stars">0</b></div>
+        </div>
+      </header>
+
+      <!-- Division / Recipe Mode Bar -->
+      <div class="race-category-bar">
+        <span class="race-cat-label">Kitchen Mode:</span>
+        <button class="race-cat-btn bakery-cat-btn active" data-cat="mix" id="btn-bakery-cat-mix">⚡ Chef Mix</button>
+        <button class="race-cat-btn bakery-cat-btn" data-cat="math" id="btn-bakery-cat-math">🔢 Math Kitchen</button>
+        <button class="race-cat-btn bakery-cat-btn" data-cat="reading" id="btn-bakery-cat-reading">📖 Reading Recipes</button>
+      </div>
+
+      <!-- Bakery Kitchen Arena -->
+      <div class="bakery-arena">
+        <!-- Left Column: Order Ticket, Live SVG Kitchen Counter & Glass Display Case -->
+        <div class="bakery-kitchen-panel">
+          <!-- Perforated Cafe Order Ticket -->
+          <div class="bakery-order-ticket" id="bakery-order-ticket">
+            <div class="ticket-top">
+              <span class="ticket-no" id="bakery-ticket-no">ORDER #101</span>
+              <span class="ticket-customer" id="bakery-ticket-customer">💖 Heartsping</span>
+              <span class="ticket-price" id="bakery-ticket-price">🪙 12 Coins</span>
+            </div>
+            <div class="ticket-title-row">
+              <span class="ticket-dessert-icon" id="bakery-dessert-icon">🎂</span>
+              <div>
+                <h3 class="ticket-dessert-name" id="bakery-dessert-name">Strawberry Crown Cake</h3>
+                <p class="ticket-dessert-desc" id="bakery-dessert-desc">Fluffy vanilla sponge layered with pink strawberry cream!</p>
+              </div>
+            </div>
+            <div class="ticket-steps-track" id="bakery-steps-track">
+              <span class="ticket-step active">1. 🥣 Batter</span>
+              <span class="ticket-step">2. 🍦 Frosting</span>
+              <span class="ticket-step">3. 🍓 Garnish</span>
+            </div>
+          </div>
+
+          <!-- Illustrated Kitchen Turntable & Convection Oven Stage -->
+          <div class="bakery-stage-frame" id="bakery-stage-frame">
+            <div class="bakery-telemetry-bar">
+              <span class="bakery-station-pill" id="bakery-station-pill">🥣 Digital Kitchen Scale</span>
+              <span class="bakery-oven-pill" id="bakery-oven-pill">🌡️ 180°F Preheat</span>
+            </div>
+            <div class="bakery-stage-box" id="bakery-stage-box"></div>
+          </div>
+
+          <!-- Glass Patisserie Display Case -->
+          <div class="bakery-showcase">
+            <span class="showcase-label">🧁 PATISSERIE DISPLAY CASE</span>
+            <div class="showcase-shelf" id="bakery-showcase-shelf">
+              <span class="showcase-empty">Complete 3 steps to display your first fresh pastry!</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right Column: Chef Recipe & Math Question Cockpit -->
+        <div class="bakery-cockpit">
+          <div class="race-question-card bakery-question-card" id="bakery-question-card">
+            <div class="race-q-top">
+              <span class="race-q-type-badge" id="bakery-q-badge">🥣 STEP 1 • MIX BATTER</span>
+              <p class="race-q-prompt" id="bakery-q-prompt">Ready to bake?</p>
+              <button class="read-btn" id="btn-bakery-read" aria-label="Read recipe step">🔊 Read</button>
+            </div>
+            <div class="race-choices" id="bakery-choices"></div>
+            <div class="race-boost-banner bakery-banner" id="bakery-banner" hidden></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TEENIEPING SUPER JUMP RUN (SUPER MARIO-STYLE PLATFORMER) -->
+    <section class="screen" data-screen="platformer" id="screen-platformer" aria-labelledby="platformer-title" hidden>
+      <header class="topbar">
+        <button class="icon-btn js-home" id="btn-platformer-back" aria-label="Back to Home">⬅️</button>
+        <h2 id="platformer-title" tabindex="-1">Super Jump Run 🍄🏰</h2>
+        <div class="tetris-hud-badges">
+          <div class="tetris-lines-badge platformer-flag-badge" id="platformer-flag-badge">Blocks: <b>0</b>/8 🚩</div>
+          <div class="star-badge" aria-label="Stars collected"><span aria-hidden="true">⭐</span><b class="js-stars">0</b></div>
+        </div>
+      </header>
+
+      <!-- Division / World Mode Bar -->
+      <div class="race-category-bar">
+        <span class="race-cat-label">Kingdom:</span>
+        <button class="race-cat-btn platformer-cat-btn active" data-cat="mix" id="btn-platformer-cat-mix">⚡ World Mix</button>
+        <button class="race-cat-btn platformer-cat-btn" data-cat="math" id="btn-platformer-cat-math">🔢 Math Kingdom</button>
+        <button class="race-cat-btn platformer-cat-btn" data-cat="reading" id="btn-platformer-cat-reading">📖 Reading Kingdom</button>
+      </div>
+
+      <!-- Classic Super Mario Arcade HUD Bar -->
+      <div class="mario-hud-bar" id="platformer-hud-bar">
+        <div class="mario-hud-stat">
+          <span class="mario-hud-lbl">HERO SCORE</span>
+          <b class="mario-hud-val" id="platformer-score-val">000000</b>
+        </div>
+        <div class="mario-hud-stat">
+          <span class="mario-hud-lbl">COINS</span>
+          <b class="mario-hud-val" id="platformer-coins-val">🪙 x00</b>
+        </div>
+        <div class="mario-hud-stat">
+          <span class="mario-hud-lbl">WORLD</span>
+          <b class="mario-hud-val" id="platformer-world-val">1-1</b>
+        </div>
+        <div class="mario-hud-stat">
+          <span class="mario-hud-lbl">POWER-UP</span>
+          <b class="mario-hud-val" id="platformer-power-val">👟 NORMAL</b>
+        </div>
+      </div>
+
+      <!-- Side-Scrolling Platformer Viewport & Course Map -->
+      <div class="platformer-stage-frame" id="platformer-stage-frame">
+        <div class="platformer-stage-box" id="platformer-stage-box"></div>
+        <div class="platformer-course-track" id="platformer-course-track"></div>
+      </div>
+
+      <!-- [?] Mystery Block Question Cockpit -->
+      <div class="race-question-card platformer-question-card" id="platformer-question-card">
+        <div class="race-q-top">
+          <span class="race-q-type-badge" id="platformer-q-badge">🧱 [?] MYSTERY BLOCK</span>
+          <p class="race-q-prompt" id="platformer-q-prompt">Hit the matching [?] Block to jump over the pipe!</p>
+          <button class="read-btn" id="btn-platformer-read" aria-label="Read question">🔊 Read</button>
+        </div>
+        <div class="race-choices platformer-block-choices" id="platformer-choices"></div>
+        <div class="race-boost-banner platformer-banner" id="platformer-banner" hidden></div>
+      </div>
+    </section>
   </main>
 
   <dialog class="reward" id="reward-dialog" aria-labelledby="reward-title">
@@ -241,12 +668,33 @@
     </div>
   </dialog>
 
-  <script src="js/data.js"></script>
-  <script src="js/stories.js"></script>
-  <script src="js/math.js"></script>
-  <script src="js/teenieping.js"></script>
-  <script src="js/teenieping-audio.js"></script>
-  <script src="js/audio.js"></script>
-  <script src="js/app.js"></script>
+  <!-- HERO SCRAPBOOK & BACKPACK DIALOG -->
+  <dialog class="hero-backpack-dialog" id="hero-backpack-dialog" aria-labelledby="backpack-title">
+    <div class="tp-picker-header">
+      <h2 id="backpack-title">🎒 Hero Scrapbook &amp; Souvenir Collection</h2>
+      <button class="tp-picker-close-btn" id="btn-close-backpack" aria-label="Close">✕</button>
+    </div>
+    <p class="tp-picker-sub">All the famous landmarks discovered, street foods tasted, and souvenirs bought across your world tour!</p>
+    <div class="backpack-tabs">
+      <button class="chip backpack-tab-btn active" data-filter="all">All Items</button>
+      <button class="chip backpack-tab-btn" data-filter="landmark">📍 Landmarks</button>
+      <button class="chip backpack-tab-btn" data-filter="food">🍜 Foods</button>
+      <button class="chip backpack-tab-btn" data-filter="souvenir">🎁 Souvenirs</button>
+    </div>
+    <div class="backpack-grid" id="backpack-grid"></div>
+  </dialog>
+
+  <script src="js/data.js?v=10"></script>
+  <script src="js/stories.js?v=10"></script>
+  <script src="js/math.js?v=10"></script>
+  <script src="js/teenieping.js?v=10"></script>
+  <script src="js/teenieping-audio.js?v=10"></script>
+  <script src="js/audio.js?v=10"></script>
+  <script src="js/race.js?v=10"></script>
+  <script src="js/tetris.js?v=10"></script>
+  <script src="js/cities.js?v=10"></script>
+  <script src="js/bakery.js?v=10"></script>
+  <script src="js/platformer.js?v=10"></script>
+  <script src="js/app.js?v=10"></script>
 </body>
 </html>

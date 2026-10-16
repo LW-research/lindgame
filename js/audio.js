@@ -74,4 +74,23 @@ const Sound = {
   correct() { [523, 659, 784, 1047].forEach((f, i) => this.tone(f, i * 0.09, 0.25, 'triangle')); },
   wrong() { this.tone(240, 0, 0.18); this.tone(200, 0.15, 0.25); },
   win() { [523, 659, 784, 1047, 784, 1047, 1319].forEach((f, i) => this.tone(f, i * 0.12, 0.3, 'triangle')); },
+  fanfare() { [523, 659, 784, 1047, 1319].forEach((f, i) => this.tone(f, i * 0.07, 0.28, 'triangle', 0.15)); },
+  turbo() { [320, 480, 720, 960, 1280].forEach((f, i) => this.tone(f, i * 0.05, 0.22, 'sawtooth', 0.12)); },
+  engineRev() { this.tone(110, 0, 0.22, 'sawtooth', 0.09); this.tone(165, 0.12, 0.28, 'sawtooth', 0.11); this.tone(220, 0.24, 0.3, 'sawtooth', 0.12); },
+  countdownBeep() { this.tone(440, 0, 0.16, 'sine', 0.14); },
+  countdownGo() { this.tone(880, 0, 0.35, 'triangle', 0.18); this.tone(1320, 0.02, 0.35, 'sine', 0.14); },
+  brakeScreech() { this.tone(310, 0, 0.14, 'sawtooth', 0.09); this.tone(180, 0.1, 0.22, 'sawtooth', 0.1); },
+  blockMove() { this.tone(540, 0, 0.04, 'triangle', 0.06); },
+  blockRotate() { this.tone(620, 0, 0.06, 'sine', 0.08); this.tone(820, 0.05, 0.08, 'triangle', 0.08); },
+  blockDrop() { this.tone(190, 0, 0.12, 'triangle', 0.16); this.tone(420, 0.03, 0.09, 'sine', 0.09); },
+  cashRegister() { this.tone(987.77, 0, 0.09, 'sine', 0.15); this.tone(1318.5, 0.09, 0.35, 'triangle', 0.18); },
+  cameraShutter() { this.tone(1200, 0, 0.03, 'sawtooth', 0.08); this.tone(800, 0.04, 0.05, 'triangle', 0.09); },
+  airplaneWhoosh() { [392, 494, 587, 784].forEach((f, i) => this.tone(f, i * 0.08, 0.25, 'sine', 0.1)); },
+  ovenDing() { this.tone(1567.98, 0, 0.42, 'sine', 0.18); this.tone(2093, 0.03, 0.35, 'triangle', 0.12); },
+  jump() { [220, 330, 440, 587, 740].forEach((f, i) => this.tone(f, i * 0.03, 0.12, 'triangle', 0.14)); },
+  coinBlock() { this.tone(987.77, 0, 0.08, 'sine', 0.18); this.tone(1318.51, 0.08, 0.32, 'sine', 0.2); },
+  powerUp() { [330, 392, 659, 523, 587, 784].forEach((f, i) => this.tone(f, i * 0.06, 0.18, 'triangle', 0.15)); },
+  pipeBump() { this.tone(150, 0, 0.14, 'sawtooth', 0.14); this.tone(110, 0.09, 0.18, 'triangle', 0.14); },
 };
+
+

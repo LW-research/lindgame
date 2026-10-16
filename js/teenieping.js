@@ -379,8 +379,10 @@
 
   const api = {
     TEENIEPINGS,
+    ROSTER: TEENIEPINGS,
     SWITCH_EVERY,
     manager,
+    get: (id) => TEENIEPINGS.find((c) => c.id === id),
     getLeader: () => manager.getLeader(),
     switchLeader: (id) => manager.switchLeader(id),
     stepQuestion: () => manager.stepQuestion(),

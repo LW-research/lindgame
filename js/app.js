@@ -57,6 +57,8 @@
   // ---------- Screens (View Transitions with fallback) ----------
   let currentScreen = 'home';
   function showScreen(name) {
+    if (name !== 'race' && typeof stopRaceMode === 'function') stopRaceMode();
+    if (name !== 'tetris' && typeof stopTetrisMode === 'function') stopTetrisMode();
     if (typeof TeeniepingAudio !== 'undefined') TeeniepingAudio.stop();
     Speech.stop();
     const update = () => {
@@ -421,7 +423,7 @@
     }
   });
 
-  // Column layout with one cell per place value, biggest place on the left.
+  // Column layout with one cell per place value, biggest place on the left, plus interactive carry/trade scratch row.
   function renderColumn(p) {
     const width = mission.digits.length;
     const places = Array.from({ length: width }, (_, k) => width - 1 - k); // e.g. [3, 2, 1, 0]
@@ -429,12 +431,18 @@
       const d = MathEngine.digitsOf(n);
       return places.map((i) => `<span class="d p${i}">${d[i] ?? ''}</span>`).join('');
     };
+    const carryCells = places.map((i) =>
+      i > 0
+        ? `<button type="button" class="carry-box p${i}" data-carry="${i}" title="Tap to mark carry or trade for ${PLACE_NAMES[i]}" aria-label="Carry or trade note for ${PLACE_NAMES[i]}"></button>`
+        : `<span class="carry-spacer" aria-hidden="true"></span>`
+    ).join('');
     const el = $('#column-sum');
     el.className = 'column-sum';
     el.style.setProperty('--cols', width);
     el.setAttribute('aria-label', `${p.a} ${opWord(p)} ${p.b}`);
     el.innerHTML = `
       <div class="col-head"><span></span>${places.map((i) => `<span class="p${i}">${PLACE_NAMES[i]}</span>`).join('')}</div>
+      <div class="col-carry"><span class="carry-lbl" title="Tap boxes to note carries">✏️</span>${carryCells}</div>
       <div class="col-row"><span></span>${cells(p.a)}</div>
       <div class="col-row"><span class="op">${opSign(p)}</span>${cells(p.b)}</div>
       <div class="col-line"></div>
@@ -454,6 +462,17 @@
   }
 
   $('#column-sum').addEventListener('click', (e) => {
+    const carryBtn = e.target.closest('.carry-box');
+    if (carryBtn && !mission.locked) {
+      Sound.tap();
+      const p = currentProblem();
+      const states = p?.op === 'sub' ? ['', '−1', '+10'] : ['', '+1'];
+      const cur = carryBtn.textContent.trim();
+      const next = states[(states.indexOf(cur) + 1) % states.length];
+      carryBtn.textContent = next;
+      carryBtn.classList.toggle('marked', Boolean(next));
+      return;
+    }
     const s = e.target.closest('.slot');
     if (!s || mission.locked) return;
     mission.slot = Number(s.dataset.slot);
@@ -1220,6 +1239,69 @@
     }
   });
 
+  const btnRace = $('#btn-race');
+  if (btnRace) {
+    btnRace.addEventListener('click', () => {
+      Sound.tap();
+      showScreen('race');
+      startRaceMode('mix');
+      const leader = typeof Teenieping !== 'undefined' ? Teenieping.getLeader() : null;
+      if (typeof TeeniepingAudio !== 'undefined') {
+        setTimeout(() => TeeniepingAudio.speakText('Turbo Racing! Answer fast to win the race!', { charId: leader ? leader.id : 'heartsping' }), 300);
+      } else {
+        setTimeout(() => Speech.say('Turbo Racing! Answer fast to win the race!'), 300);
+      }
+    });
+  }
+
+  const btnTetris = $('#btn-tetris');
+  if (btnTetris) {
+    btnTetris.addEventListener('click', () => {
+      Sound.tap();
+      showScreen('tetris');
+      startTetrisMode('mix');
+      const leader = typeof Teenieping !== 'undefined' ? Teenieping.getLeader() : null;
+      if (typeof TeeniepingAudio !== 'undefined') {
+        setTimeout(() => TeeniepingAudio.speakText('Magic Blocks! Answer questions to drop candy gems and clear lines!', { charId: leader ? leader.id : 'heartsping' }), 300);
+      } else {
+        setTimeout(() => Speech.say('Magic Blocks! Answer questions to drop candy gems and clear lines!'), 300);
+      }
+    });
+  }
+
+  const btnCityHero = $('#btn-city-hero');
+  if (btnCityHero) {
+    btnCityHero.addEventListener('click', () => {
+      Sound.tap();
+      showScreen('city-hub');
+      renderCityHub();
+      const leader = typeof Teenieping !== 'undefined' ? Teenieping.getLeader() : null;
+      if (typeof TeeniepingAudio !== 'undefined') {
+        setTimeout(() => TeeniepingAudio.speakText('City Hero! Pick a world city to explore and help citizens, chuping!', { charId: leader ? leader.id : 'heartsping' }), 300);
+      } else {
+        setTimeout(() => Speech.say('City Hero! Pick a world city to explore and help citizens!'), 300);
+      }
+    });
+  }
+
+  const btnBakery = $('#btn-bakery');
+  if (btnBakery) {
+    btnBakery.addEventListener('click', () => {
+      Sound.tap();
+      showScreen('bakery');
+      startBakeryMode();
+    });
+  }
+
+  const btnPlatformer = $('#btn-platformer');
+  if (btnPlatformer) {
+    btnPlatformer.addEventListener('click', () => {
+      Sound.tap();
+      showScreen('platformer');
+      startPlatformerMode();
+    });
+  }
+
   $$('.js-home').forEach((b) => b.addEventListener('click', () => showScreen('home')));
 
   function applyVoice() {
@@ -1249,6 +1331,1763 @@
     save();
     refreshStars();
   });
+
+  // ---------- Teenieping Turbo Racing Controller ----------
+  let raceState = {
+    category: 'mix',
+    racers: [],
+    question: null,
+    questionStartTime: 0,
+    animFrame: null,
+    lastTime: 0,
+    elapsed: 0,
+    isOver: false,
+    nitroInterval: null,
+    countdownTimers: [],
+  };
+
+  function stopRaceMode() {
+    raceState.isOver = true;
+    if (raceState.animFrame) {
+      cancelAnimationFrame(raceState.animFrame);
+      raceState.animFrame = null;
+    }
+    if (raceState.nitroInterval) {
+      clearInterval(raceState.nitroInterval);
+      raceState.nitroInterval = null;
+    }
+    if (raceState.countdownTimers.length) {
+      raceState.countdownTimers.forEach((t) => clearTimeout(t));
+      raceState.countdownTimers = [];
+    }
+  }
+
+  function runRaceCountdown() {
+    const gantry = $('#race-start-gantry');
+    const l1 = $('#race-light-1');
+    const l2 = $('#race-light-2');
+    const l3 = $('#race-light-3');
+    const txt = $('#race-gantry-text');
+    if (!gantry) return;
+
+    gantry.hidden = false;
+    [l1, l2, l3].forEach((l) => { if (l) l.className = 'gantry-bulb'; });
+    if (l1) l1.classList.add('red');
+    if (txt) txt.textContent = '3 • REV UP!';
+    Sound.countdownBeep?.();
+
+    const t1 = setTimeout(() => {
+      if (raceState.isOver) return;
+      if (l2) l2.classList.add('amber');
+      if (txt) txt.textContent = '2 • SET!';
+      Sound.countdownBeep?.();
+    }, 320);
+
+    const t2 = setTimeout(() => {
+      if (raceState.isOver) return;
+      [l1, l2, l3].forEach((l) => { if (l) l.className = 'gantry-bulb green'; });
+      if (txt) txt.textContent = '🟢 GO! GO! GO!';
+      Sound.countdownGo?.();
+    }, 640);
+
+    const t3 = setTimeout(() => {
+      if (gantry) gantry.hidden = true;
+    }, 1350);
+
+    raceState.countdownTimers.push(t1, t2, t3);
+  }
+
+  function startRaceMode(category) {
+    if (category) raceState.category = category;
+    stopRaceMode();
+
+    if (typeof RaceEngine === 'undefined') return;
+
+    const leader = typeof Teenieping !== 'undefined' ? Teenieping.getLeader() : null;
+    const roster = typeof Teenieping !== 'undefined' ? (Teenieping.TEENIEPINGS || Teenieping.ROSTER || []) : [];
+    raceState.racers = RaceEngine.createRacers(leader, roster);
+    raceState.isOver = false;
+    raceState.elapsed = 0;
+    raceState.lastTime = performance.now();
+
+    renderRaceLanes();
+    updateCategoryButtons();
+    showNextRaceQuestion();
+    Sound.engineRev?.();
+    runRaceCountdown();
+
+    const loop = (now) => {
+      if (raceState.isOver) return;
+      const dt = Math.min(0.1, (now - raceState.lastTime) / 1000);
+      raceState.lastTime = now;
+      raceState.elapsed += dt;
+
+      const update = RaceEngine.updateRace(raceState.racers, dt, raceState.elapsed);
+      updateRaceVisuals(update);
+
+      if (update.raceFinished) {
+        finishRace(update.playerRank);
+        return;
+      }
+
+      raceState.animFrame = requestAnimationFrame(loop);
+    };
+
+    raceState.animFrame = requestAnimationFrame(loop);
+  }
+
+  function renderRaceLanes() {
+    const lanesEl = $('#race-lanes');
+    if (!lanesEl) return;
+    lanesEl.innerHTML = raceState.racers.map((r, idx) => {
+      const isPlayer = r.isPlayer;
+      const char = typeof Teenieping !== 'undefined'
+        ? (typeof Teenieping.get === 'function' ? Teenieping.get(r.charId) : (Teenieping.TEENIEPINGS || []).find((c) => c.id === r.charId))
+        : null;
+      const avatarSvg = char ? char.avatarSvg : `<span>${r.symbol}</span>`;
+      const carNum = isPlayer ? '1' : String(idx + 1);
+      return `<div class="race-lane" id="race-lane-${r.id}" style="--kart-color:${r.accent}">
+        <span class="lane-number-watermark">LANE ${idx + 1}</span>
+        <div class="race-kart ${isPlayer ? 'player' : ''}" id="kart-${r.id}" style="left:4%;">
+          <div class="kart-spoiler"></div>
+          <div class="kart-exhaust">🔥</div>
+          <div class="kart-smoke" aria-hidden="true">💨</div>
+          <div class="kart-body">
+            <span class="kart-num-decal">${carNum}</span>
+            <div class="kart-driver">${avatarSvg}</div>
+            <div class="kart-windshield"></div>
+            <div class="kart-nose"></div>
+            <div class="kart-wheels"><div class="wheel"></div><div class="wheel"></div></div>
+          </div>
+          <span class="kart-tag">${isPlayer ? '⭐ YOU' : r.name}</span>
+        </div>
+      </div>`;
+    }).join('');
+
+    // Update mini-map icons
+    raceState.racers.forEach((r, i) => {
+      const progEl = i === 0 ? $('#race-prog-player') : $(`#race-prog-rival${i - 1}`);
+      if (progEl) {
+        progEl.textContent = r.symbol;
+        progEl.style.left = '0%';
+      }
+    });
+  }
+
+  function updateCategoryButtons() {
+    $$('#screen-race .race-cat-btn:not(.tetris-cat-btn)').forEach((b) => {
+      b.classList.toggle('active', b.dataset.cat === raceState.category);
+    });
+  }
+
+  function updateRaceVisuals(update) {
+    const player = raceState.racers.find((r) => r.isPlayer);
+    if (!player) return;
+
+    const rankSuffix = ['1st 🥇', '2nd 🥈', '3rd 🥉', '4th 🏁'];
+    const rankBadge = $('#race-rank-badge');
+    if (rankBadge) {
+      rankBadge.textContent = rankSuffix[Math.min(3, Math.max(0, update.playerRank - 1))];
+    }
+
+    const tel = update.telemetry || (typeof RaceEngine.computeTelemetry === 'function' ? RaceEngine.computeTelemetry(player, raceState.racers) : null);
+    const speedo = $('#race-speed-display');
+    if (speedo) {
+      speedo.textContent = tel ? tel.speedKmH : Math.round(player.speed * 3.6);
+    }
+
+    const gearEl = $('#race-gear-display');
+    if (gearEl && tel) gearEl.textContent = `G${tel.gear}`;
+
+    const rpmValEl = $('#race-rpm-val');
+    if (rpmValEl && tel) rpmValEl.textContent = tel.rpm;
+
+    const rpmFillEl = $('#race-rpm-fill');
+    if (rpmFillEl && tel) rpmFillEl.style.width = `${tel.rpmPct}%`;
+
+    const odomEl = $('#race-odom-display');
+    if (odomEl) odomEl.textContent = `${Math.round(player.distance)}m`;
+
+    const gapEl = $('#race-gap-display');
+    if (gapEl && tel) {
+      gapEl.textContent = tel.drafting ? '💨 SLIPSTREAM!' : tel.gapText;
+      gapEl.classList.toggle('drafting-active', !!tel.drafting);
+    }
+
+    const trackLen = RaceEngine.TRACK_LENGTH;
+    const sceneryEl = $('#race-scenery-strip');
+    if (sceneryEl) {
+      const visDist = typeof player.visualDistance === 'number' ? player.visualDistance : player.distance;
+      sceneryEl.style.backgroundPositionX = `${-Math.round(visDist * 1.5)}px`;
+    }
+
+    raceState.racers.forEach((r, i) => {
+      const visDist = typeof r.visualDistance === 'number' ? r.visualDistance : r.distance;
+      const pct = Math.min(100, Math.max(0, (visDist / trackLen) * 100));
+      const progEl = i === 0 ? $('#race-prog-player') : $(`#race-prog-rival${i - 1}`);
+      if (progEl) progEl.style.left = `${pct}%`;
+
+      const kartEl = $(`#kart-${r.id}`);
+      if (kartEl) {
+        const lanePct = 4 + (pct * 0.84);
+        kartEl.style.left = `${lanePct}%`;
+        const wheelDur = Math.max(0.08, Math.min(0.45, 5.5 / Math.max(8, r.speed))).toFixed(2);
+        kartEl.style.setProperty('--wheel-dur', `${wheelDur}s`);
+        if (r.boostTime > 0 && r.boostTier !== 'miss') {
+          kartEl.classList.add('boosting');
+          kartEl.classList.toggle('super-boosting', r.boostTier === 'super');
+          $(`#race-lane-${r.id}`)?.classList.add('boosting');
+        } else {
+          kartEl.classList.remove('boosting', 'super-boosting');
+          $(`#race-lane-${r.id}`)?.classList.remove('boosting');
+        }
+      }
+    });
+  }
+
+  function showNextRaceQuestion() {
+    if (raceState.isOver || typeof RaceEngine === 'undefined') return;
+    const q = RaceEngine.makeQuestion(
+      raceState.category,
+      typeof MathEngine !== 'undefined' ? MathEngine : null,
+      typeof WORD_LEVELS !== 'undefined' ? WORD_LEVELS : null
+    );
+    raceState.question = q;
+    raceState.questionStartTime = Date.now();
+
+    const badge = $('#race-q-badge');
+    const prompt = $('#race-q-prompt');
+    const choicesEl = $('#race-choices');
+    const banner = $('#race-boost-banner');
+    if (banner) banner.hidden = true;
+
+    if (badge) badge.textContent = q.category === 'math' ? '🔢 Math Sprint' : '📖 Reading Sprint';
+    if (prompt) prompt.textContent = q.prompt;
+
+    if (choicesEl) {
+      choicesEl.innerHTML = q.choices.map((c, i) =>
+        `<button class="race-choice-btn" data-idx="${i}">${c.text}</button>`
+      ).join('');
+
+      $$('#race-choices .race-choice-btn').forEach((btn, idx) => {
+        btn.addEventListener('click', () => handleRaceChoice(q.choices[idx], btn));
+      });
+    }
+
+    // Nitro gauge countdown (6 seconds bonus window)
+    if (raceState.nitroInterval) clearInterval(raceState.nitroInterval);
+    const nitroFill = $('#nitro-bar-fill');
+    if (nitroFill) {
+      nitroFill.style.width = '100%';
+      const start = Date.now();
+      raceState.nitroInterval = setInterval(() => {
+        const elapsedSec = (Date.now() - start) / 1000;
+        const pct = Math.max(0, 100 - (elapsedSec / 6.0) * 100);
+        nitroFill.style.width = `${pct}%`;
+        if (pct <= 0) {
+          clearInterval(raceState.nitroInterval);
+          raceState.nitroInterval = null;
+        }
+      }, 50);
+    }
+  }
+
+  function handleRaceChoice(choice, btn) {
+    if (raceState.isOver || !raceState.question || typeof RaceEngine === 'undefined') return;
+    const isCorrect = choice.isCorrect;
+    const duration = (Date.now() - raceState.questionStartTime) / 1000;
+    const player = raceState.racers.find((r) => r.isPlayer);
+    const result = RaceEngine.applyAnswerResult(player, isCorrect, duration);
+
+    $$('#race-choices .race-choice-btn').forEach((b) => { b.disabled = true; });
+
+    const banner = $('#race-boost-banner');
+    if (banner && result) {
+      banner.hidden = false;
+      banner.className = `race-boost-banner ${result.type}`;
+      banner.textContent = result.label;
+    }
+
+    const playerKartEl = $('#kart-player');
+
+    if (isCorrect) {
+      btn.classList.add('correct');
+      Sound.turbo?.();
+      Sound.correct?.();
+      if (duration < 3.2) {
+        confetti(30);
+        const leader = typeof Teenieping !== 'undefined' ? Teenieping.getLeader() : null;
+        if (typeof TeeniepingAudio !== 'undefined') {
+          TeeniepingAudio.playCheerWithSpeech(
+            leader ? leader.id : 'heartsping',
+            'Super Turbo boost! Zoom!',
+            { pitch: leader?.pitch, rate: leader?.rate }
+          );
+        }
+      }
+    } else {
+      btn.classList.add('wrong');
+      Sound.brakeScreech?.();
+      Sound.wrong?.();
+      if (playerKartEl) {
+        playerKartEl.classList.add('slipping');
+        setTimeout(() => playerKartEl.classList.remove('slipping'), 800);
+      }
+    }
+
+    setTimeout(() => {
+      if (!raceState.isOver) showNextRaceQuestion();
+    }, 650);
+  }
+
+  function finishRace(playerRank) {
+    stopRaceMode();
+
+    const starsAwarded = playerRank === 1 ? 3 : playerRank === 2 ? 2 : 1;
+    for (let i = 0; i < starsAwarded; i++) addStar();
+
+    const titles = {
+      1: '🏆 1st Place! Turbo Champion!',
+      2: '🥈 2nd Place! Silver Podium!',
+      3: '🥉 3rd Place! Bronze Trophy!',
+      4: '🏁 Finished the Race!',
+    };
+    const messages = {
+      1: 'Incredible driving! You won the Teenieping Grand Prix and earned 3 Stars! ⭐⭐⭐',
+      2: 'Lightning fast! You placed 2nd and earned 2 Stars! ⭐⭐',
+      3: 'Great race! You placed 3rd and earned 1 Star! ⭐',
+      4: 'You crossed the finish line! Keep answering quickly to take the lead! ⭐',
+    };
+
+    setTimeout(() => {
+      showReward({
+        emoji: playerRank === 1 ? '🏆' : playerRank === 2 ? '🥈' : '🥉',
+        title: titles[playerRank] || 'Race Complete!',
+        text: messages[playerRank] || 'Great racing!',
+        earned: starsAwarded,
+        total: 3,
+        onClose: () => {
+          showScreen('home');
+        },
+      });
+    }, 600);
+  }
+
+  // Hook up race category and audio buttons (scoped to #screen-race)
+  $$('#screen-race .race-cat-btn:not(.tetris-cat-btn)').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      Sound.tap();
+      const cat = btn.dataset.cat;
+      startRaceMode(cat);
+    });
+  });
+
+  const btnRaceRead = $('#btn-race-read');
+  if (btnRaceRead) {
+    btnRaceRead.addEventListener('click', () => {
+      if (!raceState.question) return;
+      const leader = typeof Teenieping !== 'undefined' ? Teenieping.getLeader() : null;
+      const text = raceState.question.speechText || raceState.question.prompt;
+      if (typeof TeeniepingAudio !== 'undefined') {
+        TeeniepingAudio.speakText(text, { charId: leader ? leader.id : 'heartsping' });
+      } else {
+        Speech.say(text, { pitch: leader ? leader.pitch : 1.25, rate: leader ? leader.rate : 0.88 });
+      }
+    });
+  }
+
+  // ---------- Teenieping Magic Blocks (Tetris) Controller ----------
+  let tetrisState = {
+    category: 'mix',
+    grid: [],
+    currentPiece: null,
+    nextPiece: null,
+    activePiece: null,
+    score: 0,
+    linesCleared: 0,
+    level: 1,
+    streak: 0,
+    isOver: false,
+    isAnimatingDrop: false,
+    gravityInterval: null,
+    question: null,
+    questionStartTime: 0,
+  };
+
+  function stopTetrisMode() {
+    tetrisState.isOver = true;
+    tetrisState.isAnimatingDrop = false;
+    if (tetrisState.gravityInterval) {
+      clearInterval(tetrisState.gravityInterval);
+      tetrisState.gravityInterval = null;
+    }
+  }
+
+  function spawnNextTetrisActivePiece() {
+    const leader = typeof Teenieping !== 'undefined' ? Teenieping.getLeader() : null;
+    if (!tetrisState.nextPiece) {
+      tetrisState.nextPiece = TetrisEngine.pickRandomPiece(leader ? leader.id : null);
+    }
+    tetrisState.currentPiece = tetrisState.nextPiece;
+    tetrisState.nextPiece = TetrisEngine.pickRandomPiece(leader ? leader.id : null);
+    if (typeof TetrisEngine.createActivePiece === 'function') {
+      tetrisState.activePiece = TetrisEngine.createActivePiece(tetrisState.currentPiece);
+    } else {
+      tetrisState.activePiece = null;
+    }
+  }
+
+  function startTetrisGravity() {
+    if (tetrisState.gravityInterval) clearInterval(tetrisState.gravityInterval);
+    const tickMs = Math.max(950, 2100 - (tetrisState.level - 1) * 220);
+    tetrisState.gravityInterval = setInterval(() => {
+      if (tetrisState.isOver || tetrisState.isAnimatingDrop || currentScreen !== 'tetris') return;
+      if (!tetrisState.activePiece || typeof TetrisEngine.moveActivePiece !== 'function') return;
+
+      const step = TetrisEngine.moveActivePiece(tetrisState.grid, tetrisState.activePiece, 1, 0);
+      if (step.moved) {
+        tetrisState.activePiece = step.active;
+        renderTetrisBoard();
+      } else {
+        // Reached surface naturally via gravity: wrap back to top so child has time to answer or steer
+        tetrisState.activePiece = TetrisEngine.createActivePiece(tetrisState.currentPiece);
+        renderTetrisBoard();
+      }
+    }, tickMs);
+  }
+
+  function startTetrisMode(category) {
+    if (category) tetrisState.category = category;
+    stopTetrisMode();
+
+    if (typeof TetrisEngine === 'undefined') return;
+
+    tetrisState.isOver = false;
+    tetrisState.isAnimatingDrop = false;
+    tetrisState.grid = TetrisEngine.createEmptyGrid();
+    tetrisState.nextPiece = null;
+    spawnNextTetrisActivePiece();
+    tetrisState.score = 0;
+    tetrisState.linesCleared = 0;
+    tetrisState.level = 1;
+    tetrisState.streak = 0;
+
+    const callout = $('#tetris-callout');
+    if (callout) callout.hidden = true;
+
+    renderTetrisBoard();
+    renderNextPiecePreview();
+    updateTetrisHUD();
+    updateTetrisCategoryButtons();
+    showNextTetrisQuestion();
+    startTetrisGravity();
+  }
+
+  function updateTetrisCategoryButtons() {
+    $$('.tetris-cat-btn').forEach((b) => {
+      b.classList.toggle('active', b.dataset.cat === tetrisState.category);
+    });
+  }
+
+  function updateTetrisHUD() {
+    tetrisState.level = 1 + Math.floor(tetrisState.linesCleared / 3);
+    const linesEl = $('#tetris-lines-badge');
+    if (linesEl) {
+      linesEl.innerHTML = `Lines: <b>${tetrisState.linesCleared}</b>/10 🎯`;
+    }
+    const scoreEl = $('#tetris-score-val');
+    if (scoreEl) scoreEl.textContent = tetrisState.score;
+    const levelEl = $('#tetris-level-val');
+    if (levelEl) levelEl.textContent = tetrisState.level;
+    const streakEl = $('#tetris-streak-val');
+    if (streakEl) streakEl.textContent = `🔥 ${tetrisState.streak}`;
+  }
+
+  function showTetrisCallout(text) {
+    const callout = $('#tetris-callout');
+    if (!callout) return;
+    callout.textContent = text;
+    callout.hidden = false;
+    replayClass(callout, 'pop');
+    setTimeout(() => {
+      if (callout.textContent === text) callout.hidden = true;
+    }, 1500);
+  }
+
+  function renderTetrisBoard(highlightCells = [], clearingRows = [], trailCells = []) {
+    const gridEl = $('#tetris-grid');
+    if (!gridEl || !tetrisState.grid || tetrisState.grid.length === 0) return;
+
+    const activeCells =
+      !tetrisState.isAnimatingDrop && tetrisState.activePiece && typeof TetrisEngine.getActiveCells === 'function'
+        ? TetrisEngine.getActiveCells(tetrisState.activePiece)
+        : [];
+    const ghostInfo =
+      !tetrisState.isAnimatingDrop && tetrisState.activePiece && typeof TetrisEngine.getGhostCells === 'function'
+        ? TetrisEngine.getGhostCells(tetrisState.grid, tetrisState.activePiece)
+        : { cells: [] };
+    const ghostCells = ghostInfo.cells || [];
+    const activePieceObj = tetrisState.activePiece?.piece || tetrisState.currentPiece;
+
+    const html = [];
+    const rows = tetrisState.grid.length;
+    const cols = tetrisState.grid[0].length;
+
+    for (let r = 0; r < rows; r++) {
+      const isClearingRow = clearingRows.includes(r);
+      for (let c = 0; c < cols; c++) {
+        const cell = tetrisState.grid[r][c];
+        const isHighlight = highlightCells.some(([hr, hc]) => hr === r && hc === c);
+        const isTrail = trailCells.some(([tr, tc]) => tr === r && tc === c);
+        const isActive = activeCells.some(([ar, ac]) => ar === r && ac === c);
+        const isGhost = !isActive && ghostCells.some(([gr, gc]) => gr === r && gc === c);
+
+        let classes = 'tetris-cell';
+        let style = '';
+        let content = '';
+
+        if (cell) {
+          classes += ' filled';
+          style = `--cell-glow:${cell.glow || 'rgba(255,255,255,0.4)'}; background-color:${cell.color};`;
+          content = `<span class="gem-facet">${cell.symbol || '💎'}</span>`;
+        } else if (isActive && activePieceObj) {
+          classes += ' filled active-piece';
+          style = `--cell-glow:${activePieceObj.glow || 'rgba(255,255,255,0.5)'}; background-color:${activePieceObj.color};`;
+          content = `<span class="gem-facet">${activePieceObj.symbol || '💎'}</span>`;
+        } else if (isGhost && activePieceObj) {
+          classes += ' ghost';
+          style = `--ghost-color:${activePieceObj.color};`;
+        } else if (isTrail && activePieceObj) {
+          classes += ' drop-trail';
+          style = `--trail-color:${activePieceObj.color};`;
+        }
+
+        if (isHighlight) classes += ' dropped';
+        if (isClearingRow) classes += ' clearing';
+
+        html.push(`<div class="${classes}" style="${style}" data-r="${r}" data-c="${c}">${content}</div>`);
+      }
+    }
+    gridEl.innerHTML = html.join('');
+  }
+
+  function renderNextPiecePreview() {
+    const prevBox = $('#tetris-next-preview');
+    const fairyLbl = $('#tetris-next-fairy');
+    const p = tetrisState.nextPiece || tetrisState.currentPiece;
+    if (!prevBox || !p) return;
+
+    if (fairyLbl) fairyLbl.textContent = `${p.fairyName} ${p.symbol}`;
+
+    const shape = p.shapes[0];
+    const sRows = shape.length;
+    const sCols = shape[0].length;
+
+    prevBox.innerHTML = `<div class="preview-grid" style="grid-template-columns: repeat(${sCols}, 1fr); grid-template-rows: repeat(${sRows}, 1fr);">
+      ${shape.flatMap((row) =>
+        row.map((val) =>
+          val
+            ? `<div class="preview-cell filled-preview" style="background:${p.color}; box-shadow:0 0 6px ${p.glow};"></div>`
+            : `<div class="preview-cell" style="background:transparent; border-color:transparent;"></div>`
+        )
+      ).join('')}
+    </div>`;
+  }
+
+  function steerTetrisPiece(action) {
+    if (tetrisState.isOver || tetrisState.isAnimatingDrop || !tetrisState.activePiece) return;
+    if (action === 'left') {
+      const res = TetrisEngine.moveActivePiece(tetrisState.grid, tetrisState.activePiece, 0, -1);
+      if (res.moved) {
+        tetrisState.activePiece = res.active;
+        Sound.blockMove?.();
+        renderTetrisBoard();
+      }
+    } else if (action === 'right') {
+      const res = TetrisEngine.moveActivePiece(tetrisState.grid, tetrisState.activePiece, 0, 1);
+      if (res.moved) {
+        tetrisState.activePiece = res.active;
+        Sound.blockMove?.();
+        renderTetrisBoard();
+      }
+    } else if (action === 'down') {
+      const res = TetrisEngine.moveActivePiece(tetrisState.grid, tetrisState.activePiece, 1, 0);
+      if (res.moved) {
+        tetrisState.activePiece = res.active;
+        Sound.blockMove?.();
+        renderTetrisBoard();
+      }
+    } else if (action === 'rotate') {
+      const res = TetrisEngine.rotateActivePiece(tetrisState.grid, tetrisState.activePiece);
+      if (res.rotated) {
+        tetrisState.activePiece = res.active;
+        Sound.blockRotate?.();
+        renderTetrisBoard();
+      }
+    }
+  }
+
+  $('#btn-tetris-left')?.addEventListener('click', () => steerTetrisPiece('left'));
+  $('#btn-tetris-right')?.addEventListener('click', () => steerTetrisPiece('right'));
+  $('#btn-tetris-down')?.addEventListener('click', () => steerTetrisPiece('down'));
+  $('#btn-tetris-rotate')?.addEventListener('click', () => steerTetrisPiece('rotate'));
+
+  document.addEventListener('keydown', (e) => {
+    if (currentScreen !== 'tetris' || dialog.open || tetrisState.isOver) return;
+    if (e.key === 'ArrowLeft') { e.preventDefault(); steerTetrisPiece('left'); }
+    else if (e.key === 'ArrowRight') { e.preventDefault(); steerTetrisPiece('right'); }
+    else if (e.key === 'ArrowDown') { e.preventDefault(); steerTetrisPiece('down'); }
+    else if (e.key === 'ArrowUp') { e.preventDefault(); steerTetrisPiece('rotate'); }
+  });
+
+  function showNextTetrisQuestion() {
+    if (tetrisState.isOver || typeof TetrisEngine === 'undefined') return;
+
+    let q;
+    if (typeof RaceEngine !== 'undefined' && typeof RaceEngine.makeQuestion === 'function') {
+      q = RaceEngine.makeQuestion(
+        tetrisState.category,
+        typeof MathEngine !== 'undefined' ? MathEngine : null,
+        typeof WORD_LEVELS !== 'undefined' ? WORD_LEVELS : null
+      );
+    } else {
+      q = {
+        category: 'math',
+        prompt: '1 + 1 = ?',
+        choices: [{ text: '2', isCorrect: true }, { text: '3', isCorrect: false }],
+      };
+    }
+
+    tetrisState.question = q;
+    tetrisState.questionStartTime = Date.now();
+
+    const badge = $('#tetris-q-badge');
+    const prompt = $('#tetris-q-prompt');
+    const choicesEl = $('#tetris-choices');
+    const banner = $('#tetris-spell-banner');
+    if (banner) banner.hidden = true;
+
+    if (badge) badge.textContent = q.category === 'math' ? '🔢 Math Spell' : '📖 Word Spell';
+    if (prompt) prompt.textContent = q.prompt;
+
+    if (choicesEl) {
+      choicesEl.innerHTML = q.choices.map((c, i) =>
+        `<button class="race-choice-btn" data-idx="${i}">${c.text}</button>`
+      ).join('');
+
+      $$('#tetris-choices .race-choice-btn').forEach((btn, idx) => {
+        btn.addEventListener('click', () => handleTetrisChoice(q.choices[idx], btn));
+      });
+    }
+
+    const leader = typeof Teenieping !== 'undefined' ? Teenieping.getLeader() : null;
+    const text = q.speechText || q.prompt;
+    if (typeof TeeniepingAudio !== 'undefined') {
+      setTimeout(() => {
+        if (!tetrisState.isOver && tetrisState.question === q) {
+          TeeniepingAudio.speakText(text, { charId: leader ? leader.id : 'heartsping' });
+        }
+      }, 350);
+    } else {
+      setTimeout(() => {
+        if (!tetrisState.isOver && tetrisState.question === q) {
+          Speech.say(text, { pitch: leader ? leader.pitch : 1.25, rate: leader ? leader.rate : 0.88 });
+        }
+      }, 350);
+    }
+  }
+
+  function handleTetrisChoice(choice, btn) {
+    if (tetrisState.isOver || !tetrisState.question || typeof TetrisEngine === 'undefined') return;
+
+    const isCorrect = choice.isCorrect;
+    const piece = tetrisState.currentPiece;
+    const banner = $('#tetris-spell-banner');
+    const cheerLbl = $('#tetris-fairy-cheer');
+
+    $$('#tetris-choices .race-choice-btn').forEach((b) => { b.disabled = true; });
+    tetrisState.isAnimatingDrop = true;
+
+    if (isCorrect) {
+      btn.classList.add('correct');
+      Sound.blockDrop?.();
+      Sound.correct?.();
+      tetrisState.streak++;
+
+      // Magic Smart Auto-Placement
+      const bestMove = TetrisEngine.findBestPlacement(tetrisState.grid, piece);
+      if (bestMove) {
+        const startRow = tetrisState.activePiece ? tetrisState.activePiece.row : 0;
+        const trailCells = typeof TetrisEngine.getDropTrailCells === 'function'
+          ? TetrisEngine.getDropTrailCells(bestMove.shapeMatrix, startRow, bestMove.row, bestMove.col)
+          : [];
+
+        tetrisState.grid = TetrisEngine.placePiece(
+          tetrisState.grid,
+          bestMove.shapeMatrix,
+          bestMove.row,
+          bestMove.col,
+          piece
+        );
+
+        const highlightCells = [];
+        for (let r = 0; r < bestMove.shapeMatrix.length; r++) {
+          for (let c = 0; c < bestMove.shapeMatrix[0].length; c++) {
+            if (bestMove.shapeMatrix[r][c]) {
+              highlightCells.push([bestMove.row + r, bestMove.col + c]);
+            }
+          }
+        }
+        renderTetrisBoard(highlightCells, [], trailCells);
+
+        if (banner) {
+          banner.hidden = false;
+          banner.className = 'race-boost-banner normal';
+          banner.textContent = `✨ Perfect Magic Fit! ${piece.symbol}`;
+        }
+        if (cheerLbl) cheerLbl.textContent = `✨ ${piece.fairyName} locked a crystal gem!`;
+
+        const clearResult = TetrisEngine.clearCompletedLines(tetrisState.grid);
+        if (clearResult.linesCleared > 0) {
+          const calloutNames = ['', '✨ SINGLE +100!', '🔥 DOUBLE +300!', '⚡ TRIPLE +600!', '💎 MAGIC TETRIS +1200!'];
+          showTetrisCallout(calloutNames[clearResult.linesCleared] || `🌟 ${clearResult.linesCleared} LINES!`);
+
+          setTimeout(() => {
+            renderTetrisBoard([], clearResult.clearedIndices);
+            Sound.fanfare?.();
+            confetti(30);
+
+            tetrisState.grid = clearResult.grid;
+            tetrisState.linesCleared += clearResult.linesCleared;
+            tetrisState.score += TetrisEngine.calculateScore(clearResult.linesCleared);
+            updateTetrisHUD();
+
+            const leader = typeof Teenieping !== 'undefined' ? Teenieping.getLeader() : null;
+            if (typeof TeeniepingAudio !== 'undefined') {
+              TeeniepingAudio.playCheerWithSpeech(
+                leader ? leader.id : 'heartsping',
+                `${clearResult.linesCleared} row${clearResult.linesCleared > 1 ? 's' : ''} cleared! Super magic!`,
+                { pitch: leader?.pitch, rate: leader?.rate }
+              );
+            }
+
+            if (banner) {
+              banner.className = 'race-boost-banner super';
+              banner.textContent = `🎉 Cleared ${clearResult.linesCleared} line${clearResult.linesCleared > 1 ? 's' : ''}! +${TetrisEngine.calculateScore(clearResult.linesCleared)} pts`;
+            }
+
+            if (tetrisState.linesCleared >= TetrisEngine.TARGET_LINES_FOR_VICTORY) {
+              setTimeout(() => finishTetris(true), 600);
+              return;
+            }
+
+            setTimeout(() => {
+              tetrisState.isAnimatingDrop = false;
+              renderTetrisBoard();
+            }, 280);
+          }, 320);
+        } else {
+          setTimeout(() => {
+            tetrisState.isAnimatingDrop = false;
+            renderTetrisBoard();
+          }, 260);
+        }
+      } else {
+        tetrisState.isAnimatingDrop = false;
+      }
+    } else {
+      btn.classList.add('wrong');
+      Sound.wrong?.();
+      Sound.blockDrop?.();
+      tetrisState.streak = 0;
+
+      const clumsyMove = TetrisEngine.findSuboptimalPlacement(tetrisState.grid, piece);
+      if (clumsyMove) {
+        tetrisState.grid = TetrisEngine.placePiece(
+          tetrisState.grid,
+          clumsyMove.shapeMatrix,
+          clumsyMove.row,
+          clumsyMove.col,
+          piece
+        );
+        renderTetrisBoard();
+      }
+
+      if (banner) {
+        banner.hidden = false;
+        banner.className = 'race-boost-banner miss';
+        banner.textContent = `⚠️ Clumsy drop! Solve the next one!`;
+      }
+      if (cheerLbl) cheerLbl.textContent = 'Keep trying! We can clear the board together! 💪';
+
+      if (TetrisEngine.isTopOut(tetrisState.grid)) {
+        setTimeout(() => {
+          tetrisState.grid = TetrisEngine.rescueClear(tetrisState.grid);
+          tetrisState.isAnimatingDrop = false;
+          renderTetrisBoard();
+          confetti(15);
+          if (banner) {
+            banner.className = 'race-boost-banner normal';
+            banner.textContent = '🧚 Teenieping Magic Rescue! Top cleared! ✨';
+          }
+        }, 400);
+      } else {
+        setTimeout(() => {
+          tetrisState.isAnimatingDrop = false;
+          renderTetrisBoard();
+        }, 250);
+      }
+    }
+
+    if (typeof Teenieping !== 'undefined' && typeof Teenieping.stepQuestion === 'function') {
+      Teenieping.stepQuestion();
+    }
+
+    spawnNextTetrisActivePiece();
+    renderNextPiecePreview();
+    updateTetrisHUD();
+
+    setTimeout(() => {
+      if (!tetrisState.isOver) showNextTetrisQuestion();
+    }, 700);
+  }
+
+  function finishTetris(victory) {
+    stopTetrisMode();
+
+    const lines = tetrisState.linesCleared;
+    const starsAwarded = lines >= 10 ? 3 : lines >= 6 ? 2 : lines >= 3 ? 1 : 1;
+    for (let i = 0; i < starsAwarded; i++) addStar();
+
+    setTimeout(() => {
+      showReward({
+        emoji: starsAwarded === 3 ? '🏆' : starsAwarded === 2 ? '⭐' : '🧩',
+        title: 'Magic Blocks Champion! 🎉',
+        text: `You cleared ${lines} line${lines === 1 ? '' : 's'} and scored ${tetrisState.score} points with Teenieping magic! Earned ${starsAwarded} Star${starsAwarded > 1 ? 's' : ''}! ⭐`,
+        earned: starsAwarded,
+        total: 3,
+        onClose: () => {
+          showScreen('home');
+        },
+      });
+    }, 500);
+  }
+
+  // Hook up Tetris buttons
+  $$('.tetris-cat-btn').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      Sound.tap();
+      const cat = btn.dataset.cat;
+      startTetrisMode(cat);
+    });
+  });
+
+  const btnTetrisRead = $('#btn-tetris-read');
+  if (btnTetrisRead) {
+    btnTetrisRead.addEventListener('click', () => {
+      if (!tetrisState.question) return;
+      const leader = typeof Teenieping !== 'undefined' ? Teenieping.getLeader() : null;
+      const text = tetrisState.question.speechText || tetrisState.question.prompt;
+      if (typeof TeeniepingAudio !== 'undefined') {
+        TeeniepingAudio.speakText(text, { charId: leader ? leader.id : 'heartsping' });
+      } else {
+        Speech.say(text, { pitch: leader ? leader.pitch : 1.25, rate: leader ? leader.rate : 0.88 });
+      }
+    });
+  }
+
+  // ---------- Teenieping City Hero Controller ----------
+  let cityHeroState = {
+    currentCityId: null,
+    currentStopIdx: 0,
+    backpack: [],
+    completedCities: {},
+    activePuzzle: null,
+    backpackFilter: 'all',
+  };
+
+  if (state.cityBackpack) cityHeroState.backpack = state.cityBackpack;
+  if (state.cityCompleted) cityHeroState.completedCities = state.cityCompleted;
+
+  function saveCityHeroState() {
+    state.cityBackpack = cityHeroState.backpack;
+    state.cityCompleted = cityHeroState.completedCities;
+    save();
+  }
+
+  function renderCityHub() {
+    const gridEl = $('#city-passport-grid');
+    if (!gridEl || typeof CityHeroEngine === 'undefined') return;
+
+    const cities = CityHeroEngine.getCities();
+    gridEl.innerHTML = cities.map((city) => {
+      const isCompleted = !!cityHeroState.completedCities[city.id];
+      const visitedStops = cityHeroState.backpack.filter((item) => item.cityId === city.id).length;
+      const flightMeta = typeof CityHeroEngine.getCityFlightMeta === 'function'
+        ? CityHeroEngine.getCityFlightMeta(city)
+        : { airport: city.country, flightNo: 'TP-101', weather: '☀️' };
+      return `<div class="city-passport-card" id="city-card-${city.id}" data-city="${city.id}">
+        <div class="city-card-header" style="background:${city.skyGradient}">
+          <span class="city-card-flag-badge">${city.flag}</span>
+          <span class="city-card-icon">${city.icon}</span>
+          ${isCompleted ? '<span class="city-card-stamp">HERO STAMP 🏵️</span>' : ''}
+        </div>
+        <div class="city-card-body">
+          <div class="city-boarding-line">
+            <span class="boarding-code">✈️ ${flightMeta.flightNo}</span>
+            <span class="boarding-airport">${flightMeta.airport}</span>
+          </div>
+          <h3 class="city-card-name">${city.name}</h3>
+          <span class="city-card-country">${city.country} • ${city.currency} • ${flightMeta.weather}</span>
+        </div>
+        <div class="city-card-footer">
+          <span class="city-card-progress">${isCompleted ? '⭐ 4/4 Explored' : `${visitedStops}/4 Stops`}</span>
+          <button class="chip city-card-btn">${isCompleted ? 'Explore Again ✈️' : 'Fly Here ✈️'}</button>
+        </div>
+      </div>`;
+    }).join('');
+
+    $$('.city-passport-card').forEach((card) => {
+      card.addEventListener('click', () => {
+        Sound.airplaneWhoosh?.();
+        const cityId = card.dataset.city;
+        startCityMission(cityId);
+      });
+    });
+  }
+
+  function startCityMission(cityId) {
+    if (typeof CityHeroEngine === 'undefined') return;
+    const city = CityHeroEngine.getCity(cityId);
+    if (!city) return;
+
+    cityHeroState.currentCityId = cityId;
+    cityHeroState.currentStopIdx = 0;
+    cityHeroState.activePuzzle = null;
+
+    showScreen('city-tour');
+
+    const titleEl = $('#city-tour-title');
+    if (titleEl) titleEl.textContent = `${city.name} Hero Tour ${city.icon}`;
+
+    const flightMeta = typeof CityHeroEngine.getCityFlightMeta === 'function'
+      ? CityHeroEngine.getCityFlightMeta(city)
+      : null;
+    if (flightMeta) {
+      const codeEl = $('#city-flight-code');
+      if (codeEl) codeEl.textContent = `✈️ Flight ${flightMeta.flightNo} • ${flightMeta.airport}`;
+      const timeEl = $('#city-local-time');
+      if (timeEl) timeEl.textContent = `🕒 ${flightMeta.localTime}`;
+      const weatherEl = $('#city-local-weather');
+      if (weatherEl) weatherEl.textContent = flightMeta.weather;
+      const currEl = $('#city-currency-pill');
+      if (currEl) currEl.textContent = `🪙 Currency: ${city.currency}`;
+    }
+
+    renderCityTourStop();
+
+    const leader = typeof Teenieping !== 'undefined' ? Teenieping.getLeader() : null;
+    const greeting = city.greeting || `Welcome to ${city.name}!`;
+    if (typeof TeeniepingAudio !== 'undefined') {
+      setTimeout(() => TeeniepingAudio.speakText(greeting, { charId: leader ? leader.id : 'heartsping' }), 300);
+    } else {
+      setTimeout(() => Speech.say(greeting), 300);
+    }
+  }
+
+  function renderCityTourStop() {
+    if (typeof CityHeroEngine === 'undefined') return;
+    const city = CityHeroEngine.getCity(cityHeroState.currentCityId);
+    if (!city) return;
+
+    const stopIdx = cityHeroState.currentStopIdx;
+    const stop = city.stops[stopIdx];
+    if (!stop) return;
+
+    const stepperEl = $('#city-tour-stepper');
+    if (stepperEl) {
+      stepperEl.innerHTML = city.stops.map((s, idx) => {
+        const isCurrent = idx === stopIdx;
+        const isDone = idx < stopIdx;
+        const cls = isCurrent ? 'active' : isDone ? 'completed' : '';
+        const icon = isDone ? '✅' : s.icon;
+        return `<div class="tour-step-node ${cls}">
+          <span>${icon}</span>
+          <span>${(s.categoryLabel && s.categoryLabel.split(' ')[1]) || s.title}</span>
+        </div>`;
+      }).join('');
+    }
+
+    const catEl = $('#city-stop-category');
+    if (catEl) catEl.textContent = stop.categoryLabel || stop.title;
+
+    const camTag = $('#city-camera-tag');
+    if (camTag) {
+      camTag.textContent = stop.puzzleType === 'math' ? '🧾 MARKET COUNTER' : '📸 LANDMARK VIEWFINDER';
+    }
+
+    const dioramaEl = $('#city-stop-diorama');
+    if (dioramaEl && typeof CityHeroEngine.getStopSceneSvg === 'function') {
+      dioramaEl.innerHTML = CityHeroEngine.getStopSceneSvg(city, stop);
+    }
+
+    const bannerEl = $('#city-stop-banner');
+    if (bannerEl && stop.bannerBg) bannerEl.style.background = stop.bannerBg;
+
+    const iconEl = $('#city-stop-icon');
+    if (iconEl) iconEl.textContent = stop.icon;
+
+    const nameEl = $('#city-stop-name');
+    if (nameEl) nameEl.textContent = stop.title;
+
+    const factEl = $('#city-stop-fact');
+    if (factEl) factEl.textContent = stop.fact;
+
+    const rIconEl = $('#city-reward-icon');
+    if (rIconEl) rIconEl.textContent = stop.reward.icon;
+
+    const rNameEl = $('#city-reward-name');
+    if (rNameEl) rNameEl.textContent = stop.reward.name;
+
+    const rDescEl = $('#city-reward-desc');
+    if (rDescEl) rDescEl.textContent = stop.reward.desc || `Authentic keepsake from ${city.name}!`;
+
+    const bCountEl = $('#tour-backpack-count');
+    if (bCountEl) bCountEl.textContent = cityHeroState.backpack.length;
+
+    const puzzle = CityHeroEngine.makeStopPuzzle(city, stop);
+    cityHeroState.activePuzzle = puzzle;
+
+    const badgeEl = $('#city-q-badge');
+    if (badgeEl) badgeEl.textContent = puzzle.type === 'reading' ? '📖 Reading Challenge' : '🔢 Math Market';
+
+    const promptEl = $('#city-q-prompt');
+    if (promptEl) promptEl.textContent = puzzle.prompt;
+
+    const marketTray = $('#city-market-tray');
+    if (marketTray) {
+      if (puzzle.type === 'math') {
+        const unitWord = (city.currency || 'Coins').split(' ')[0];
+        const coinEmoji = (city.currency || '').includes('💵') ? '💵' : '🪙';
+        const opLabel = stop.mathOp === '-' ? 'CHANGE DUE' : 'TOTAL COST';
+        const tokensA = coinEmoji.repeat(Math.min(10, stop.mathA || 1));
+        const tokensB = coinEmoji.repeat(Math.min(10, stop.mathB || 1));
+        marketTray.hidden = false;
+        marketTray.innerHTML = `
+          <div class="market-receipt-row">
+            <span class="receipt-col"><small>${stop.mathOp === '-' ? 'YOU PAY' : 'ITEM 1'}</small><b>${stop.mathA} ${unitWord}</b><span class="coin-row">${tokensA}</span></span>
+            <span class="receipt-op">${stop.mathOp === '-' ? '−' : '+'}</span>
+            <span class="receipt-col"><small>${stop.mathOp === '-' ? 'ITEM PRICE' : 'ITEM 2'}</small><b>${stop.mathB} ${unitWord}</b><span class="coin-row">${tokensB}</span></span>
+            <span class="receipt-op">=</span>
+            <span class="receipt-col total-col"><small>${opLabel}</small><b>? ${unitWord}</b></span>
+          </div>`;
+      } else {
+        marketTray.hidden = true;
+        marketTray.innerHTML = '';
+      }
+    }
+
+    const feedbackBanner = $('#city-feedback-banner');
+    if (feedbackBanner) feedbackBanner.hidden = true;
+
+    const choicesEl = $('#city-q-choices');
+    if (choicesEl) {
+      choicesEl.innerHTML = puzzle.choices.map((c, i) =>
+        `<button class="race-choice-btn" data-idx="${i}">${c.text}</button>`
+      ).join('');
+
+      $$('#city-q-choices .race-choice-btn').forEach((btn, idx) => {
+        btn.addEventListener('click', () => handleCityStopChoice(puzzle.choices[idx], btn));
+      });
+    }
+
+    const leader = typeof Teenieping !== 'undefined' ? Teenieping.getLeader() : null;
+    const speechText = puzzle.speechText || puzzle.prompt;
+    if (typeof TeeniepingAudio !== 'undefined') {
+      setTimeout(() => {
+        if (cityHeroState.activePuzzle === puzzle) {
+          TeeniepingAudio.speakText(speechText, { charId: leader ? leader.id : 'heartsping' });
+        }
+      }, 400);
+    } else {
+      setTimeout(() => {
+        if (cityHeroState.activePuzzle === puzzle) {
+          Speech.say(speechText, { pitch: leader ? leader.pitch : 1.25, rate: leader ? leader.rate : 0.88 });
+        }
+      }, 400);
+    }
+  }
+
+  function handleCityStopChoice(choice, btn) {
+    const puzzle = cityHeroState.activePuzzle;
+    if (!puzzle) return;
+
+    const city = CityHeroEngine.getCity(cityHeroState.currentCityId);
+    const stop = city.stops[cityHeroState.currentStopIdx];
+    const banner = $('#city-feedback-banner');
+
+    $$('#city-q-choices .race-choice-btn').forEach((b) => { b.disabled = true; });
+
+    if (choice.isCorrect) {
+      btn.classList.add('correct');
+      if (puzzle.type === 'math') {
+        Sound.cashRegister?.();
+      } else {
+        Sound.cameraShutter?.();
+        const dioramaEl = $('#city-stop-diorama');
+        if (dioramaEl) replayClass(dioramaEl, 'camera-flash');
+      }
+      Sound.fanfare?.();
+      confetti(25);
+
+      const alreadyCollected = cityHeroState.backpack.some((item) => item.id === stop.reward.id);
+      if (!alreadyCollected) {
+        cityHeroState.backpack.push({
+          ...stop.reward,
+          cityId: city.id,
+          cityName: city.name,
+          cityFlag: city.flag,
+        });
+        saveCityHeroState();
+      }
+
+      const bCountEl = $('#tour-backpack-count');
+      if (bCountEl) bCountEl.textContent = cityHeroState.backpack.length;
+
+      if (banner) {
+        banner.hidden = false;
+        banner.className = 'race-boost-banner super';
+        banner.textContent = `🎉 Unlocked ${stop.reward.name}! Added to Backpack 🎒`;
+      }
+
+      const leader = typeof Teenieping !== 'undefined' ? Teenieping.getLeader() : null;
+      if (typeof TeeniepingAudio !== 'undefined') {
+        TeeniepingAudio.playCheerWithSpeech(
+          leader ? leader.id : 'heartsping',
+          `Wonderful! You discovered ${stop.reward.name}, chuping!`,
+          { pitch: leader?.pitch, rate: leader?.rate }
+        );
+      }
+
+      if (typeof Teenieping !== 'undefined' && typeof Teenieping.stepQuestion === 'function') {
+        Teenieping.stepQuestion();
+      }
+
+      setTimeout(() => {
+        cityHeroState.currentStopIdx++;
+        if (cityHeroState.currentStopIdx >= city.stops.length) {
+          finishCityMission(city);
+        } else {
+          renderCityTourStop();
+        }
+      }, 1200);
+    } else {
+      btn.classList.add('wrong');
+      Sound.wrong?.();
+
+      if (banner) {
+        banner.hidden = false;
+        banner.className = 'race-boost-banner miss';
+        banner.textContent = 'Keep trying! Read or calculate carefully! 💪';
+      }
+
+      setTimeout(() => {
+        $$('#city-q-choices .race-choice-btn').forEach((b) => { b.disabled = false; });
+        btn.classList.remove('wrong');
+      }, 700);
+    }
+  }
+
+  function finishCityMission(city) {
+    cityHeroState.completedCities[city.id] = true;
+    saveCityHeroState();
+
+    for (let i = 0; i < 3; i++) addStar();
+
+    setTimeout(() => {
+      showReward({
+        emoji: city.icon,
+        title: `${city.name} Hero Stamp! 🏵️`,
+        text: `Splendid world exploration! You explored all places of interest, tasted local street food, and collected authentic souvenirs in ${city.name}! Earned 3 Stars! ⭐⭐⭐`,
+        earned: 3,
+        total: 3,
+        onClose: () => {
+          showScreen('city-hub');
+          renderCityHub();
+        },
+      });
+    }, 500);
+  }
+
+  function showBackpackDialog(filter = 'all') {
+    const dlg = $('#hero-backpack-dialog');
+    const grid = $('#backpack-grid');
+    if (!dlg || !grid) return;
+
+    cityHeroState.backpackFilter = filter;
+
+    $$('.backpack-tab-btn').forEach((btn) => {
+      btn.classList.toggle('active', btn.dataset.filter === filter);
+    });
+
+    const items = cityHeroState.backpack.filter((item) => {
+      if (filter === 'all') return true;
+      if (filter === 'souvenir') return item.type === 'souvenir' || item.type === 'culture';
+      return item.type === filter;
+    });
+
+    if (items.length === 0) {
+      grid.innerHTML = `<div class="backpack-empty-msg">
+        🎒 Your Hero Scrapbook is empty! Explore world cities to collect famous landmarks, foods, and souvenirs!
+      </div>`;
+    } else {
+      grid.innerHTML = items.map((item) => `
+        <div class="backpack-item-card">
+          <span class="backpack-item-icon">${item.icon}</span>
+          <b class="backpack-item-name">${item.name}</b>
+          <span class="backpack-item-city">${item.cityFlag || '🌍'} ${item.cityName || ''}</span>
+        </div>
+      `).join('');
+    }
+
+    dlg.showModal();
+  }
+
+  // Hook up City Hero buttons
+  const btnOpenBackpack = $('#btn-open-backpack');
+  if (btnOpenBackpack) btnOpenBackpack.addEventListener('click', () => showBackpackDialog('all'));
+
+  const btnTourBackpack = $('#btn-tour-backpack');
+  if (btnTourBackpack) btnTourBackpack.addEventListener('click', () => showBackpackDialog('all'));
+
+  const btnCloseBackpack = $('#btn-close-backpack');
+  if (btnCloseBackpack) btnCloseBackpack.addEventListener('click', () => $('#hero-backpack-dialog')?.close());
+
+  const btnCityTourBack = $('#btn-city-tour-back');
+  if (btnCityTourBack) {
+    btnCityTourBack.addEventListener('click', () => {
+      Sound.tap();
+      showScreen('city-hub');
+      renderCityHub();
+    });
+  }
+
+  $$('.backpack-tab-btn').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      Sound.tap();
+      showBackpackDialog(btn.dataset.filter);
+    });
+  });
+
+  const btnCityQRead = $('#btn-city-q-read');
+  if (btnCityQRead) {
+    btnCityQRead.addEventListener('click', () => {
+      const puzzle = cityHeroState.activePuzzle;
+      if (!puzzle) return;
+      const leader = typeof Teenieping !== 'undefined' ? Teenieping.getLeader() : null;
+      const text = puzzle.speechText || puzzle.prompt;
+      if (typeof TeeniepingAudio !== 'undefined') {
+        TeeniepingAudio.speakText(text, { charId: leader ? leader.id : 'heartsping' });
+      } else {
+        Speech.say(text, { pitch: leader ? leader.pitch : 1.25, rate: leader ? leader.rate : 0.88 });
+      }
+    });
+  }
+
+  // ---------- Teenieping Sweet Bakery Controller ----------
+  let bakeryState = {
+    category: 'mix',
+    ordersCompleted: 0,
+    currentOrder: null,
+    question: null,
+    bakedShowcase: [],
+    isLocked: false,
+  };
+
+  function startBakeryMode(category) {
+    if (category) bakeryState.category = category;
+    if (typeof BakeryEngine === 'undefined') return;
+
+    bakeryState.ordersCompleted = 0;
+    bakeryState.bakedShowcase = [];
+    bakeryState.isLocked = false;
+
+    $$('.bakery-cat-btn').forEach((btn) => {
+      btn.classList.toggle('active', btn.dataset.cat === bakeryState.category);
+    });
+
+    const leader = typeof Teenieping !== 'undefined' ? Teenieping.getLeader() : null;
+    bakeryState.currentOrder = BakeryEngine.pickOrder(1, leader ? leader.id : null, null);
+
+    renderBakeryUI();
+    showNextBakeryQuestion();
+
+    const welcomeMsg = 'Welcome to Harmony Town Sweet Bakery! Let us measure, frost, and bake delicious treats, chuping!';
+    if (typeof TeeniepingAudio !== 'undefined') {
+      setTimeout(() => TeeniepingAudio.speakText(welcomeMsg, { charId: leader ? leader.id : 'heartsping' }), 280);
+    } else {
+      setTimeout(() => Speech.say(welcomeMsg), 280);
+    }
+  }
+
+  function renderBakeryUI() {
+    if (typeof BakeryEngine === 'undefined' || !bakeryState.currentOrder) return;
+    const order = bakeryState.currentOrder;
+    const recipe = order.recipe;
+    const stepMeta = BakeryEngine.getStepMetadata(order.currentStep);
+
+    const badgeOrders = $('#bakery-orders-badge');
+    if (badgeOrders) {
+      badgeOrders.innerHTML = `Orders: <b>${bakeryState.ordersCompleted}</b>/${BakeryEngine.TARGET_ORDERS_FOR_VICTORY} 🧁`;
+    }
+
+    const ticketNo = $('#bakery-ticket-no');
+    if (ticketNo) ticketNo.textContent = `ORDER #${order.orderNo}`;
+
+    const ticketCust = $('#bakery-ticket-customer');
+    if (ticketCust) ticketCust.textContent = `${recipe.customerSymbol} ${recipe.customerName}`;
+
+    const ticketPrice = $('#bakery-ticket-price');
+    if (ticketPrice) ticketPrice.textContent = `🪙 ${recipe.priceCoins} Coins`;
+
+    const dIcon = $('#bakery-dessert-icon');
+    if (dIcon) dIcon.textContent = recipe.icon;
+
+    const dName = $('#bakery-dessert-name');
+    if (dName) dName.textContent = recipe.name;
+
+    const dDesc = $('#bakery-dessert-desc');
+    if (dDesc) dDesc.textContent = recipe.desc;
+
+    const stepsTrack = $('#bakery-steps-track');
+    if (stepsTrack) {
+      const labels = ['1. 🥣 Batter', '2. 🍦 Frosting', '3. 🍓 Garnish'];
+      stepsTrack.innerHTML = labels.map((lbl, idx) => {
+        const cls = idx < order.currentStep ? 'done' : idx === order.currentStep ? 'active' : '';
+        const prefix = idx < order.currentStep ? '✅ ' : '';
+        return `<span class="ticket-step ${cls}">${prefix}${lbl}</span>`;
+      }).join('');
+    }
+
+    const stationPill = $('#bakery-station-pill');
+    if (stationPill && stepMeta) stationPill.textContent = `🥣 ${stepMeta.station}`;
+
+    const ovenPill = $('#bakery-oven-pill');
+    if (ovenPill && stepMeta) ovenPill.textContent = `🌡️ ${stepMeta.ovenTemp}`;
+
+    const stageBox = $('#bakery-stage-box');
+    if (stageBox) {
+      stageBox.innerHTML = BakeryEngine.renderKitchenSvg(order);
+    }
+
+    const shelfEl = $('#bakery-showcase-shelf');
+    if (shelfEl) {
+      if (bakeryState.bakedShowcase.length === 0) {
+        shelfEl.innerHTML = `<span class="showcase-empty">Complete 3 steps to display your first fresh pastry!</span>`;
+      } else {
+        shelfEl.innerHTML = bakeryState.bakedShowcase.map((item) => `
+          <div class="showcase-pastry-pill">
+            <span class="pastry-pill-icon">${item.icon}</span>
+            <div class="pastry-pill-meta">
+              <b>${item.name}</b>
+              <small>${item.customerSymbol} ${item.customerName} • 🪙 ${item.priceCoins}</small>
+            </div>
+          </div>
+        `).join('');
+      }
+    }
+  }
+
+  function showNextBakeryQuestion() {
+    if (typeof BakeryEngine === 'undefined' || !bakeryState.currentOrder) return;
+    bakeryState.isLocked = false;
+
+    const q = BakeryEngine.makeStepQuestion(
+      bakeryState.category,
+      bakeryState.currentOrder,
+      typeof MathEngine !== 'undefined' ? MathEngine : null,
+      typeof WORD_LEVELS !== 'undefined' ? WORD_LEVELS : null,
+      typeof RaceEngine !== 'undefined' ? RaceEngine : null
+    );
+    bakeryState.question = q;
+
+    const badgeEl = $('#bakery-q-badge');
+    if (badgeEl) badgeEl.textContent = q.badge || '🥣 Kitchen Step';
+
+    const promptEl = $('#bakery-q-prompt');
+    if (promptEl) promptEl.textContent = q.prompt;
+
+    const bannerEl = $('#bakery-banner');
+    if (bannerEl) bannerEl.hidden = true;
+
+    const choicesEl = $('#bakery-choices');
+    if (choicesEl) {
+      choicesEl.innerHTML = q.choices.map((c, i) =>
+        `<button class="race-choice-btn" data-idx="${i}">${c.text}</button>`
+      ).join('');
+
+      $$('#bakery-choices .race-choice-btn').forEach((btn, idx) => {
+        btn.addEventListener('click', () => handleBakeryChoice(q.choices[idx], btn));
+      });
+    }
+  }
+
+  function handleBakeryChoice(choice, btn) {
+    if (bakeryState.isLocked || !bakeryState.currentOrder || !bakeryState.question) return;
+    const order = bakeryState.currentOrder;
+    const banner = $('#bakery-banner');
+
+    if (choice.isCorrect) {
+      bakeryState.isLocked = true;
+      btn.classList.add('correct');
+      $$('#bakery-choices .race-choice-btn').forEach((b) => { b.disabled = true; });
+
+      const stepMeta = BakeryEngine.getStepMetadata(order.currentStep);
+      order.currentStep++;
+
+      renderBakeryUI();
+      const stageFrame = $('#bakery-stage-frame');
+      if (stageFrame) replayClass(stageFrame, 'pop');
+
+      if (order.currentStep >= BakeryEngine.STEPS_PER_ORDER) {
+        // Order finished!
+        Sound.ovenDing?.();
+        Sound.cashRegister?.();
+        confetti(35);
+
+        bakeryState.ordersCompleted++;
+        bakeryState.bakedShowcase.push({ ...order.recipe });
+        renderBakeryUI();
+
+        if (banner) {
+          banner.hidden = false;
+          banner.className = 'race-boost-banner super';
+          banner.textContent = `🎂 Order #${order.orderNo} Complete! Served ${order.recipe.name} to ${order.recipe.customerName}!`;
+        }
+
+        const leader = typeof Teenieping !== 'undefined' ? Teenieping.getLeader() : null;
+        if (typeof TeeniepingAudio !== 'undefined') {
+          TeeniepingAudio.playCheerWithSpeech(
+            leader ? leader.id : 'heartsping',
+            `Order up! ${order.recipe.name} is baked to perfection!`,
+            { pitch: leader?.pitch, rate: leader?.rate }
+          );
+        }
+
+        if (typeof Teenieping !== 'undefined' && typeof Teenieping.stepQuestion === 'function') {
+          Teenieping.stepQuestion();
+        }
+
+        setTimeout(() => {
+          if (bakeryState.ordersCompleted >= BakeryEngine.TARGET_ORDERS_FOR_VICTORY) {
+            finishBakeryShift();
+          } else {
+            const nextLeader = typeof Teenieping !== 'undefined' ? Teenieping.getLeader() : null;
+            bakeryState.currentOrder = BakeryEngine.pickOrder(
+              bakeryState.ordersCompleted + 1,
+              nextLeader ? nextLeader.id : null,
+              order.recipe.id
+            );
+            renderBakeryUI();
+            showNextBakeryQuestion();
+          }
+        }, 1250);
+      } else {
+        // Intermediate step finished
+        Sound.correct?.();
+        if (banner && stepMeta) {
+          banner.hidden = false;
+          banner.className = 'race-boost-banner turbo';
+          banner.textContent = `✨ ${stepMeta.actionVerb}`;
+        }
+
+        if (typeof Teenieping !== 'undefined' && typeof Teenieping.stepQuestion === 'function') {
+          Teenieping.stepQuestion();
+        }
+
+        setTimeout(() => {
+          showNextBakeryQuestion();
+        }, 850);
+      }
+    } else {
+      order.mistakes++;
+      btn.classList.add('wrong');
+      btn.disabled = true;
+      Sound.wrong?.();
+
+      if (banner) {
+        banner.hidden = false;
+        banner.className = 'race-boost-banner miss';
+        banner.textContent = '💨 Puff of flour! Check the recipe measurement and try again!';
+      }
+    }
+  }
+
+  function finishBakeryShift() {
+    for (let i = 0; i < 3; i++) addStar();
+    Sound.fanfare?.();
+
+    setTimeout(() => {
+      showReward({
+        emoji: '👩‍🍳',
+        title: 'Master Pastry Chef! 🎂',
+        text: `Delicious work! You baked and served all ${BakeryEngine.TARGET_ORDERS_FOR_VICTORY} royal Teenieping dessert orders and earned 3 Stars! ⭐⭐⭐`,
+        earned: 3,
+        total: 3,
+        onClose: () => {
+          showScreen('home');
+        },
+      });
+    }, 450);
+  }
+
+  $$('.bakery-cat-btn').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      Sound.tap();
+      startBakeryMode(btn.dataset.cat);
+    });
+  });
+
+  const btnBakeryRead = $('#btn-bakery-read');
+  if (btnBakeryRead) {
+    btnBakeryRead.addEventListener('click', () => {
+      if (!bakeryState.question) return;
+      const leader = typeof Teenieping !== 'undefined' ? Teenieping.getLeader() : null;
+      const text = bakeryState.question.speechText || bakeryState.question.prompt;
+      if (typeof TeeniepingAudio !== 'undefined') {
+        TeeniepingAudio.speakText(text, { charId: leader ? leader.id : 'heartsping' });
+      } else {
+        Speech.say(text, { pitch: leader ? leader.pitch : 1.25, rate: leader ? leader.rate : 0.88 });
+      }
+    });
+  }
+
+  // ---------- Teenieping Super Jump Run (Mario-Style Platformer) Controller ----------
+  let platformerState = {
+    category: 'mix',
+    worldIdx: 0,
+    run: null,
+    question: null,
+    questionStartTime: 0,
+    animState: 'idle',
+    isLocked: false,
+  };
+
+  function startPlatformerMode(category) {
+    if (category) platformerState.category = category;
+    if (typeof PlatformerEngine === 'undefined') return;
+
+    const leader = typeof Teenieping !== 'undefined' ? Teenieping.getLeader() : null;
+    platformerState.run = PlatformerEngine.createRunState(leader, platformerState.worldIdx);
+    platformerState.animState = 'idle';
+    platformerState.isLocked = false;
+
+    $$('.platformer-cat-btn').forEach((btn) => {
+      btn.classList.toggle('active', btn.dataset.cat === platformerState.category);
+    });
+
+    renderPlatformerUI();
+    showNextPlatformerQuestion();
+
+    const msg = 'Super Jump Run! Hit the right Mystery Block to jump over pipes and reach the Castle Flagpole, chuping!';
+    if (typeof TeeniepingAudio !== 'undefined') {
+      setTimeout(() => TeeniepingAudio.speakText(msg, { charId: leader ? leader.id : 'heartsping' }), 280);
+    } else {
+      setTimeout(() => Speech.say(msg), 280);
+    }
+  }
+
+  function renderPlatformerUI() {
+    if (typeof PlatformerEngine === 'undefined' || !platformerState.run) return;
+    const run = platformerState.run;
+
+    const flagBadge = $('#platformer-flag-badge');
+    if (flagBadge) {
+      flagBadge.innerHTML = `Blocks: <b>${run.checkpoint}</b>/${run.totalCheckpoints} 🚩`;
+    }
+
+    const scoreEl = $('#platformer-score-val');
+    if (scoreEl) scoreEl.textContent = String(run.score).padStart(6, '0');
+
+    const coinsEl = $('#platformer-coins-val');
+    if (coinsEl) coinsEl.textContent = `🪙 x${String(run.coins).padStart(2, '0')}`;
+
+    const worldEl = $('#platformer-world-val');
+    if (worldEl) worldEl.textContent = run.world.id;
+
+    const powerEl = $('#platformer-power-val');
+    if (powerEl) {
+      const powerMap = {
+        normal: '👟 NORMAL',
+        mushroom: '🍄 SUPER BIG',
+        star: '🌟 INVINCIBLE',
+      };
+      powerEl.textContent = powerMap[run.powerUp] || '👟 NORMAL';
+    }
+
+    const stageBox = $('#platformer-stage-box');
+    if (stageBox) {
+      stageBox.innerHTML = PlatformerEngine.renderStageSvg(run, platformerState.animState);
+    }
+
+    const trackEl = $('#platformer-course-track');
+    if (trackEl) {
+      const nodes = [];
+      for (let i = 0; i < run.totalCheckpoints; i++) {
+        const obs = run.obstacles[i];
+        const isCurrent = i === run.checkpoint && !run.finished;
+        const isCleared = i < run.checkpoint || run.finished;
+        const cls = isCleared ? 'cleared' : isCurrent ? 'current' : '';
+        const icon = isCleared ? '🪙' : isCurrent ? run.heroSymbol : obs.icon;
+        nodes.push(`<span class="course-node ${cls}" title="Checkpoint ${i + 1}">${icon}</span>`);
+      }
+      nodes.push(`<span class="course-node castle ${run.finished ? 'cleared' : ''}">🚩🏰</span>`);
+      trackEl.innerHTML = nodes.join('');
+    }
+  }
+
+  function showNextPlatformerQuestion() {
+    if (typeof PlatformerEngine === 'undefined' || !platformerState.run) return;
+    platformerState.isLocked = false;
+    platformerState.animState = 'idle';
+    renderPlatformerUI();
+
+    const q = PlatformerEngine.makeBlockQuestion(
+      platformerState.category,
+      typeof MathEngine !== 'undefined' ? MathEngine : null,
+      typeof WORD_LEVELS !== 'undefined' ? WORD_LEVELS : null,
+      typeof RaceEngine !== 'undefined' ? RaceEngine : null
+    );
+    platformerState.question = q;
+    platformerState.questionStartTime = Date.now();
+
+    const badgeEl = $('#platformer-q-badge');
+    if (badgeEl) badgeEl.textContent = q.badge || '🧱 [?] MYSTERY BLOCK';
+
+    const promptEl = $('#platformer-q-prompt');
+    if (promptEl) promptEl.textContent = q.prompt;
+
+    const bannerEl = $('#platformer-banner');
+    if (bannerEl) bannerEl.hidden = true;
+
+    const choicesEl = $('#platformer-choices');
+    if (choicesEl) {
+      choicesEl.innerHTML = q.choices.map((c, i) =>
+        `<button class="race-choice-btn mario-q-block" data-idx="${i}">
+          <span class="q-block-rivets" aria-hidden="true">?</span>
+          <span class="q-block-val">${c.text}</span>
+        </button>`
+      ).join('');
+
+      $$('#platformer-choices .mario-q-block').forEach((btn, idx) => {
+        btn.addEventListener('click', () => handlePlatformerChoice(q.choices[idx], btn));
+      });
+    }
+  }
+
+  function handlePlatformerChoice(choice, btn) {
+    if (platformerState.isLocked || !platformerState.run || !platformerState.question) return;
+    const duration = (Date.now() - platformerState.questionStartTime) / 1000;
+    const res = PlatformerEngine.applyJumpResult(platformerState.run, choice.isCorrect, duration);
+    const banner = $('#platformer-banner');
+
+    if (choice.isCorrect) {
+      platformerState.isLocked = true;
+      btn.classList.add('correct');
+      $$('#platformer-choices .mario-q-block').forEach((b) => { b.disabled = true; });
+
+      platformerState.animState = res.action;
+      renderPlatformerUI();
+
+      Sound.jump?.();
+      setTimeout(() => Sound.coinBlock?.(), 110);
+      if (res.powerUpEarned) {
+        setTimeout(() => Sound.powerUp?.(), 220);
+      }
+
+      if (banner) {
+        banner.hidden = false;
+        banner.className = `race-boost-banner ${res.action === 'star-leap' || res.finished ? 'super' : 'turbo'}`;
+        banner.textContent = res.callout;
+      }
+
+      if (typeof Teenieping !== 'undefined' && typeof Teenieping.stepQuestion === 'function') {
+        Teenieping.stepQuestion();
+      }
+
+      if (res.finished) {
+        confetti(45);
+        const leader = typeof Teenieping !== 'undefined' ? Teenieping.getLeader() : null;
+        if (typeof TeeniepingAudio !== 'undefined') {
+          TeeniepingAudio.playCheerWithSpeech(
+            leader ? leader.id : 'heartsping',
+            'Yahoo! Top of the flagpole! You cleared the kingdom!',
+            { pitch: leader?.pitch, rate: leader?.rate }
+          );
+        }
+        setTimeout(() => {
+          platformerState.worldIdx = (platformerState.worldIdx + 1) % PlatformerEngine.WORLDS.length;
+          finishPlatformerRun();
+        }, 1250);
+      } else {
+        setTimeout(() => {
+          showNextPlatformerQuestion();
+        }, 900);
+      }
+    } else {
+      btn.classList.add('wrong');
+      btn.disabled = true;
+      platformerState.animState = 'pipe-bump';
+      renderPlatformerUI();
+      Sound.pipeBump?.();
+
+      if (banner) {
+        banner.hidden = false;
+        banner.className = 'race-boost-banner miss';
+        banner.textContent = res.callout;
+      }
+    }
+  }
+
+  function finishPlatformerRun() {
+    for (let i = 0; i < 3; i++) addStar();
+    Sound.fanfare?.();
+
+    const run = platformerState.run;
+    setTimeout(() => {
+      showReward({
+        emoji: '🍄',
+        title: `${run ? run.world.name : 'Kingdom'} Cleared! 🚩`,
+        text: `Super jumping! You collected ${run ? run.coins : 0} Golden Coins, scored ${run ? run.score : 0} points, and reached the Star Castle! Earned 3 Stars! ⭐⭐⭐`,
+        earned: 3,
+        total: 3,
+        onClose: () => {
+          showScreen('home');
+        },
+      });
+    }, 450);
+  }
+
+  $$('.platformer-cat-btn').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      Sound.tap();
+      startPlatformerMode(btn.dataset.cat);
+    });
+  });
+
+  const btnPlatformerRead = $('#btn-platformer-read');
+  if (btnPlatformerRead) {
+    btnPlatformerRead.addEventListener('click', () => {
+      if (!platformerState.question) return;
+      const leader = typeof Teenieping !== 'undefined' ? Teenieping.getLeader() : null;
+      const text = platformerState.question.speechText || platformerState.question.prompt;
+      if (typeof TeeniepingAudio !== 'undefined') {
+        TeeniepingAudio.speakText(text, { charId: leader ? leader.id : 'heartsping' });
+      } else {
+        Speech.say(text, { pitch: leader ? leader.pitch : 1.25, rate: leader ? leader.rate : 0.88 });
+      }
+    });
+  }
 
   // ---------- Boot ----------
   makeSky();
