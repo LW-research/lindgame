@@ -47,6 +47,11 @@ describe('BakeryEngine', () => {
     assert.equal(readQ.category, 'reading');
     assert.equal(readQ.choices.length, 4);
     assert.equal(readQ.choices.filter((c) => c.isCorrect).length, 1);
+    if (readQ.subType === 'recipe-cloze') {
+      assert.ok(readQ.speechText && readQ.speechText.length > 0);
+      assert.ok(!readQ.speechText.includes('______'), 'speechText must not say blank');
+      assert.ok(!readQ.speechText.includes(readQ.answer), 'speechText must stop before the answer');
+    }
 
     // Mix mode
     const mixQ = BakeryEngine.makeStepQuestion('mix', order, MathEngine, WORD_LEVELS, RaceEngine);

@@ -117,12 +117,22 @@
         clearInterval(this.progressTimer);
         this.progressTimer = null;
       }
+      if (this._cancelCurrent) {
+        this._cancelCurrent();
+        this._cancelCurrent = null;
+      }
       if (this.currentAudio) {
-        try {
-          this.currentAudio.pause();
-          this.currentAudio.currentTime = 0;
-        } catch (_) {}
+        const a = this.currentAudio;
         this.currentAudio = null;
+        try {
+          a.onplay = null;
+          a.ontimeupdate = null;
+          a.onended = null;
+          a.onerror = null;
+          a.pause();
+          a.currentTime = 0;
+          a.src = '';
+        } catch (_) {}
       }
       if (typeof root.Speech !== 'undefined' && root.Speech.stop) {
         root.Speech.stop();
@@ -212,9 +222,9 @@
         }
       };
 
-      if (typeof window === 'undefined') {
+      if (typeof window === 'undefined' || this.ttsEndpointAvailable === false) {
         fallback();
-        return false;
+        return true;
       }
 
       try {
@@ -223,20 +233,51 @@
         this.currentAudio = audio;
 
         let handled = false;
-        const finish = (usedFallback = false) => {
-          if (handled) return;
+        let stallTimeout = null;
+
+        this._cancelCurrent = () => {
           handled = true;
+          if (stallTimeout) {
+            clearTimeout(stallTimeout);
+            stallTimeout = null;
+          }
           if (this.progressTimer) {
             clearInterval(this.progressTimer);
             this.progressTimer = null;
           }
-          this.currentAudio = null;
+        };
+
+        const finish = (usedFallback = false) => {
+          if (handled) return;
+          handled = true;
+          this._cancelCurrent = null;
+          if (stallTimeout) {
+            clearTimeout(stallTimeout);
+            stallTimeout = null;
+          }
+          if (this.progressTimer) {
+            clearInterval(this.progressTimer);
+            this.progressTimer = null;
+          }
+          if (this.currentAudio === audio) {
+            this.currentAudio = null;
+          }
           if (usedFallback) {
+            this.ttsEndpointAvailable = false;
             fallback();
           } else {
             onEnd?.();
           }
         };
+
+        // If network audio doesn't start playing within 2000ms, instantly switch to Web Speech API
+        stallTimeout = setTimeout(() => {
+          if (!handled && audio.paused) {
+            console.warn('[TeeniepingAudio] Network TTS stalled, switching to native Web Speech API.');
+            try { audio.src = ''; } catch (_) {}
+            finish(true);
+          }
+        }, 2000);
 
         const words = onBoundary ? this.computeWordOffsets(text) : [];
         let lastWordIdx = -1;
@@ -256,6 +297,10 @@
         };
 
         audio.onplay = () => {
+          if (stallTimeout) {
+            clearTimeout(stallTimeout);
+            stallTimeout = null;
+          }
           if (onBoundary && words.length > 0) {
             lastWordIdx = 0;
             onBoundary(words[0].charIndex);
@@ -266,6 +311,8 @@
         audio.ontimeupdate = updateBoundary;
         audio.onended = () => finish(false);
         audio.onerror = () => {
+          if (handled) return;
+          this.ttsEndpointAvailable = false;
           console.warn(`[TeeniepingAudio] TTS endpoint failed for "${text.slice(0, 30)}...", falling back to Web Speech.`);
           finish(true);
         };
@@ -273,12 +320,15 @@
         const playPromise = audio.play();
         if (playPromise && playPromise.catch) {
           playPromise.catch((err) => {
+            if (handled || err.name === 'AbortError') return;
+            this.ttsEndpointAvailable = false;
             console.warn('[TeeniepingAudio] TTS play interrupted or blocked:', err);
             finish(true);
           });
         }
         return true;
       } catch (err) {
+        this.ttsEndpointAvailable = false;
         console.error('[TeeniepingAudio] TTS error:', err);
         fallback();
         return false;

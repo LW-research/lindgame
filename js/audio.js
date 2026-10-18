@@ -25,18 +25,67 @@ const Speech = {
   // onBoundary(charIndex) fires as each word is spoken (used for read-along highlighting).
   say(text, { rate = 0.88, pitch = 1.25, onBoundary, onEnd } = {}) {
     if (!this.supported || !this.enabled) { onEnd?.(); return; }
-    speechSynthesis.cancel();
+    try { speechSynthesis.cancel(); } catch (_) {}
+    if (speechSynthesis.paused) {
+      try { speechSynthesis.resume(); } catch (_) {}
+    }
+
     const u = new SpeechSynthesisUtterance(text);
+    if (!this.voice) {
+      const voices = (speechSynthesis.getVoices && speechSynthesis.getVoices()) || [];
+      const enVoices = voices.filter((v) => /^en[-_]/i.test(v.lang));
+      const preferred = ['Samantha', 'Victoria', 'Tessa', 'Karen', 'Google US English', 'Zira', 'Susan', 'Moira'];
+      this.voice =
+        preferred.map((n) => enVoices.find((v) => v.name.includes(n))).find(Boolean) ||
+        enVoices.find((v) => /female/i.test(v.name)) ||
+        enVoices.find((v) => /en[-_]US/i.test(v.lang)) ||
+        enVoices[0] ||
+        null;
+    }
     if (this.voice) u.voice = this.voice;
     u.lang = this.voice?.lang || 'en-US';
     u.rate = rate;
     u.pitch = pitch;
-    if (onBoundary) u.onboundary = (e) => { if (e.name !== 'sentence') onBoundary(e.charIndex); };
-    u.onend = u.onerror = () => onEnd?.();
+
+    let finished = false;
+    const done = () => {
+      if (finished) return;
+      finished = true;
+      if (this._activeUtterance === u) {
+        this._activeUtterance = null;
+      }
+      onEnd?.();
+    };
+
+    if (onBoundary) {
+      u.onboundary = (e) => {
+        if (e.name !== 'sentence') onBoundary(e.charIndex);
+      };
+    }
+    u.onend = done;
+    u.onerror = (e) => {
+      if (e.error === 'interrupted' || e.error === 'canceled') return;
+      done();
+    };
+
+    this._activeUtterance = u;
     speechSynthesis.speak(u);
+    if (speechSynthesis.paused) {
+      try { speechSynthesis.resume(); } catch (_) {}
+    }
   },
 
-  stop() { if (this.supported) speechSynthesis.cancel(); },
+  stop() {
+    if (this.supported) {
+      if (this._activeUtterance) {
+        this._activeUtterance.onend = null;
+        this._activeUtterance.onerror = null;
+        this._activeUtterance.onboundary = null;
+        this._activeUtterance = null;
+      }
+      try { speechSynthesis.cancel(); } catch (_) {}
+    }
+  },
 };
 
 const Sound = {
@@ -71,6 +120,7 @@ const Sound = {
   },
 
   tap() { this.tone(660, 0, 0.08, 'triangle', 0.07); },
+  pop() { this.tone(784, 0, 0.06, 'triangle', 0.1); },
   correct() { [523, 659, 784, 1047].forEach((f, i) => this.tone(f, i * 0.09, 0.25, 'triangle')); },
   wrong() { this.tone(240, 0, 0.18); this.tone(200, 0.15, 0.25); },
   win() { [523, 659, 784, 1047, 784, 1047, 1319].forEach((f, i) => this.tone(f, i * 0.12, 0.3, 'triangle')); },

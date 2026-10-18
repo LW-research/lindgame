@@ -1,7 +1,7 @@
 // Run with: node --test tests/article.test.js
 const test = require('node:test');
 const assert = require('node:assert');
-const { parseArticle } = require('../js/data.js');
+const { parseArticle, getParagraphTextUpToBlank } = require('../js/data.js');
 const { STORY_THEMES, makeArticle } = require('../js/stories.js');
 
 test('all story themes have valid metadata and paragraph generators', () => {
@@ -66,3 +66,52 @@ test('article text reconstructs completely when blanks filled', () => {
     }
   }
 });
+
+test('getParagraphTextUpToBlank reads the paragraph up until the words need to be filled in', () => {
+  for (const theme of STORY_THEMES) {
+    const art = makeArticle(theme);
+    const parsed = parseArticle(art);
+    const filled = {};
+
+    for (let bIdx = 0; bIdx < parsed.blanks.length; bIdx++) {
+      const textUpToBlank = getParagraphTextUpToBlank(parsed, filled, bIdx);
+      const targetBlank = parsed.blanks[bIdx];
+
+      assert.ok(textUpToBlank && textUpToBlank.length > 0, `Spoken text for blank ${bIdx} must not be empty`);
+      // Must not read the blank word or brackets before the child fills it in
+      assert.ok(!textUpToBlank.includes('[['), 'Must not contain [[');
+      assert.ok(!textUpToBlank.includes(']]'), 'Must not contain ]]');
+
+      // Find paragraph index containing target blank
+      const pIdx = parsed.parsedParagraphs.findIndex((p) => p.some((s) => s.type === 'blank' && s.blankIndex === bIdx));
+      assert.ok(pIdx !== -1, `Blank ${bIdx} must belong to a paragraph`);
+
+      // Ensure the text starts with the beginning of that paragraph
+      const firstTextSeg = parsed.parsedParagraphs[pIdx].find((s) => s.type === 'text');
+      if (firstTextSeg) {
+        assert.ok(textUpToBlank.startsWith(firstTextSeg.text.trim().slice(0, 15)), 'Must begin at start of paragraph');
+      }
+
+      // Fill this blank for subsequent blanks in the same paragraph
+      filled[bIdx] = targetBlank.correct;
+    }
+  }
+});
+
+test('clean word pronunciation extraction handles punctuation, trailing dots, and contractions', () => {
+  const sampleWords = [
+    { input: 'Space,', expected: 'Space' },
+    { input: 'moon.', expected: 'moon' },
+    { input: '"stars"', expected: 'stars' },
+    { input: 'Teenieping\'s', expected: "Teenieping's" },
+    { input: 'Look!', expected: 'Look' },
+    { input: 'can\'t', expected: "can't" },
+    { input: 'far...', expected: 'far' },
+  ];
+
+  for (const { input, expected } of sampleWords) {
+    const clean = input.replace(/[^\w']/g, '').trim();
+    assert.strictEqual(clean, expected);
+  }
+});
+

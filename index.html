@@ -222,10 +222,13 @@
               <h3 class="article-heading" id="article-heading">The Moon in Space</h3>
               <span class="article-level-tag" id="article-level-tag">Easy • Level 1</span>
             </div>
-            <button class="read-btn" id="btn-story-read">🔊 Read to me</button>
+            <div class="article-top-actions">
+              <button class="read-btn" id="btn-story-read" title="Host reads from beginning of paragraph up to blank">🔊 Read to me</button>
+              <button class="chip bank-listen-btn" id="btn-story-listen-again" title="Click each word to get pronunciation">👂 Listen again</button>
+            </div>
           </div>
           <div class="article-paragraphs" id="article-paragraphs"></div>
-          <p class="tap-tip">👆 Tap any word to hear it! Choose words on the right to fill in the blanks.</p>
+          <p class="tap-tip" id="story-tap-tip">👆 Tap any word to hear it! Choose words on the right to fill in the blanks.</p>
         </article>
 
         <!-- Fill-in-the-blank Word Bank -->
@@ -233,6 +236,7 @@
           <div class="bank-header">
             <span class="bank-tag" id="bank-tag">Blank 1 of 4</span>
             <p class="bank-prompt" id="bank-prompt">Choose the word that fits in blank 1:</p>
+            <button class="chip bank-listen-btn" id="btn-bank-listen-again" aria-label="Listen to word pronunciations">👂 Listen again</button>
           </div>
           <div class="bank-choices" id="bank-choices"></div>
           <p class="feedback" id="article-feedback" aria-live="polite"></p>
@@ -503,6 +507,7 @@
             <span class="race-q-type-badge" id="city-q-badge">Puzzle</span>
             <p class="race-q-prompt" id="city-q-prompt">Read and solve to unlock the stop!</p>
             <button class="read-btn" id="btn-city-q-read" aria-label="Read question">🔊 Read</button>
+            <button class="chip bank-listen-btn" id="btn-city-listen-again" aria-label="Click words to hear pronunciation" hidden>👂 Listen again</button>
           </div>
           <!-- Realistic Market Coin/Receipt Tray for Math Stops -->
           <div class="city-market-tray" id="city-market-tray" hidden></div>
@@ -581,6 +586,7 @@
               <span class="race-q-type-badge" id="bakery-q-badge">🥣 STEP 1 • MIX BATTER</span>
               <p class="race-q-prompt" id="bakery-q-prompt">Ready to bake?</p>
               <button class="read-btn" id="btn-bakery-read" aria-label="Read recipe step">🔊 Read</button>
+              <button class="chip bank-listen-btn" id="btn-bakery-listen-again" aria-label="Click words to hear pronunciation" hidden>👂 Listen again</button>
             </div>
             <div class="race-choices" id="bakery-choices"></div>
             <div class="race-boost-banner bakery-banner" id="bakery-banner" hidden></div>

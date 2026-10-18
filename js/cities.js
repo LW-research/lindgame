@@ -460,6 +460,10 @@
         isCorrect: word.toLowerCase() === target.toLowerCase(),
       }));
 
+      // Find text up to missing word for host reading
+      const targetMatch = passage.match(new RegExp(`\\b${target}\\b`, 'i'));
+      const textUpToBlank = targetMatch ? passage.slice(0, targetMatch.index).trim() : passage;
+
       // Create cloze prompt with blank
       const promptText = passage.replace(new RegExp(`\\b${target}\\b`, 'i'), '______');
 
@@ -468,7 +472,7 @@
         category: 'reading',
         headline: `${city.flag} ${stop.title}`,
         prompt: promptText,
-        speechText: stop.speechPrompt || `Fill in the blank: ${promptText}`,
+        speechText: textUpToBlank,
         choices,
         correctWord: target,
         reward: stop.reward,

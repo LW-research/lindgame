@@ -18,10 +18,11 @@ try:
 except ImportError:
     HAS_EDGE_TTS = False
 
+EDGE_TTS_WORKING = True
 DEFAULT_HOST = "127.0.0.1"
 PORT = 8642
 MAX_TEXT_LEN = 300
-TTS_TIMEOUT_SECONDS = 10.0
+TTS_TIMEOUT_SECONDS = 5.0
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 CACHE_DIR = os.path.join(BASE_DIR, "audio", "cache")
 os.makedirs(CACHE_DIR, exist_ok=True)
@@ -119,7 +120,11 @@ class TeeniepingGameHandler(SimpleHTTPRequestHandler):
         else:
             self.send_header("Access-Control-Allow-Origin", "*")
 
+    def do_HEAD(self):
+        self.do_GET()
+
     def do_GET(self):
+        global EDGE_TTS_WORKING
         parsed = urlparse(self.path)
 
         if parsed.path == "/api/health":
@@ -129,7 +134,7 @@ class TeeniepingGameHandler(SimpleHTTPRequestHandler):
             self.end_headers()
             self.wfile.write(json.dumps({
                 "status": "ok",
-                "tts": HAS_EDGE_TTS,
+                "tts": HAS_EDGE_TTS and EDGE_TTS_WORKING,
                 "cached": len(os.listdir(CACHE_DIR))
             }).encode("utf-8"))
             return
@@ -153,13 +158,6 @@ class TeeniepingGameHandler(SimpleHTTPRequestHandler):
                 self.wfile.write(b"Text exceeds maximum allowed length")
                 return
 
-            if not HAS_EDGE_TTS:
-                self.send_response(503)
-                self.set_cors_headers()
-                self.end_headers()
-                self.wfile.write(b"TTS engine not available")
-                return
-
             if char not in VOICE_PROFILES:
                 char = "heartsping"
 
@@ -168,7 +166,22 @@ class TeeniepingGameHandler(SimpleHTTPRequestHandler):
             cache_key = hashlib.md5(key_src.encode("utf-8")).hexdigest()
             cache_file = os.path.join(CACHE_DIR, f"{cache_key}.mp3")
 
+            # Validate cache: remove corrupt 0-byte files
+            if os.path.exists(cache_file) and os.path.getsize(cache_file) == 0:
+                try:
+                    os.remove(cache_file)
+                except OSError:
+                    pass
+
+            # If not in cache, check TTS availability and generate dynamically
             if not os.path.exists(cache_file):
+                if not HAS_EDGE_TTS or not EDGE_TTS_WORKING:
+                    self.send_response(503)
+                    self.set_cors_headers()
+                    self.end_headers()
+                    self.wfile.write(b"TTS engine not available")
+                    return
+
                 try:
                     asyncio.run(asyncio.wait_for(
                         generate_speech(text, profile, cache_file),
@@ -176,6 +189,11 @@ class TeeniepingGameHandler(SimpleHTTPRequestHandler):
                     ))
                 except TimeoutError:
                     print(f"[TTS Timeout] Request timed out for character {char}", file=sys.stderr)
+                    if os.path.exists(cache_file) and os.path.getsize(cache_file) == 0:
+                        try:
+                            os.remove(cache_file)
+                        except OSError:
+                            pass
                     self.send_response(504)
                     self.set_cors_headers()
                     self.end_headers()
@@ -183,7 +201,14 @@ class TeeniepingGameHandler(SimpleHTTPRequestHandler):
                     return
                 except Exception as e:
                     print(f"[TTS Error] {e}", file=sys.stderr)
-                    self.send_response(500)
+                    if os.path.exists(cache_file) and os.path.getsize(cache_file) == 0:
+                        try:
+                            os.remove(cache_file)
+                        except OSError:
+                            pass
+                    # Trip circuit breaker on connection / 403 failure
+                    EDGE_TTS_WORKING = False
+                    self.send_response(503)
                     self.set_cors_headers()
                     self.end_headers()
                     self.wfile.write(b"TTS generation failed")

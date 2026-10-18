@@ -50,6 +50,10 @@ describe('CityHeroEngine', () => {
     assert.equal(correctChoices.length, 1, 'Must have exactly one correct choice');
     assert.equal(correctChoices[0].text, towerStop.missingWord);
     assert.ok(puzzle.reward, 'Puzzle must reference stop reward');
+    assert.ok(puzzle.speechText && puzzle.speechText.length > 0, 'Puzzle must have speechText for host reading');
+    assert.ok(!puzzle.speechText.includes('______'), 'speechText must not say blank placeholder');
+    assert.ok(!puzzle.speechText.includes(towerStop.missingWord), 'speechText must stop before the missing word');
+    assert.ok(towerStop.readingPassage.startsWith(puzzle.speechText), 'speechText must be prefix of passage');
   });
 
   it('generates accurate math market puzzles for food/souvenir stops', () => {

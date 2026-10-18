@@ -126,6 +126,37 @@ function parseArticle(article) {
   return { ...article, parsedParagraphs, blanks };
 }
 
+// Extracts the text of the paragraph containing targetBlankIndex from the start
+// of that paragraph up until that blank (with any previously filled blanks in that
+// paragraph replaced by their filled word).
+function getParagraphTextUpToBlank(parsed, filled = {}, targetBlankIndex = 0) {
+  if (!parsed || !parsed.parsedParagraphs || targetBlankIndex == null) return '';
+  let targetPIdx = -1;
+  for (let i = 0; i < parsed.parsedParagraphs.length; i++) {
+    if (parsed.parsedParagraphs[i].some((seg) => seg.type === 'blank' && seg.blankIndex === targetBlankIndex)) {
+      targetPIdx = i;
+      break;
+    }
+  }
+  if (targetPIdx === -1) return '';
+
+  let text = '';
+  const segments = parsed.parsedParagraphs[targetPIdx];
+  for (const seg of segments) {
+    if (seg.type === 'text') {
+      text += seg.text;
+    } else if (seg.type === 'blank') {
+      if (seg.blankIndex === targetBlankIndex) {
+        break; // Stop right before the words that need to be filled in!
+      } else {
+        const word = filled[seg.blankIndex] || parsed.blanks[seg.blankIndex].correct;
+        text += word;
+      }
+    }
+  }
+  return text.trim();
+}
+
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
     pick,
@@ -140,6 +171,7 @@ if (typeof module !== 'undefined' && module.exports) {
     WORD_LEVELS,
     PRAISE,
     parseArticle,
+    getParagraphTextUpToBlank,
   };
 }
 

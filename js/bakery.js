@@ -302,12 +302,13 @@
         value: w,
         isCorrect: w === rStep.answer,
       }));
+      const textUpToBlank = rStep.sentence.split('______')[0].trim();
       return {
         category: 'reading',
         subType: 'recipe-cloze',
         badge: stepMeta.badge,
         prompt: `📖 Recipe Card: "${rStep.sentence}"`,
-        speechText: rStep.sentence.replace('______', 'blank'),
+        speechText: textUpToBlank,
         answer: rStep.answer,
         choices,
       };
@@ -324,11 +325,13 @@
 
     // Fallback
     const fallbackStep = RECIPES[0].readingSteps[0];
+    const fallbackTextUpToBlank = fallbackStep.sentence.split('______')[0].trim();
     return {
       category: 'reading',
+      subType: 'recipe-cloze',
       badge: stepMeta.badge,
       prompt: `📖 Recipe Card: "${fallbackStep.sentence}"`,
-      speechText: fallbackStep.sentence.replace('______', 'blank'),
+      speechText: fallbackTextUpToBlank,
       answer: fallbackStep.answer,
       choices: shuffle(fallbackStep.choices).map((w) => ({
         text: w,

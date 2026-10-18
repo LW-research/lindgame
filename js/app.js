@@ -923,6 +923,8 @@
     articleState.filled = {};
     articleState.activeBlankIndex = 0;
     articleState.locked = false;
+    articleState.hostReading = false;
+    clearTimeout(articleState.safetyTimer);
 
     $('#stories-title').textContent = parsed.title;
     $('#article-heading').textContent = parsed.title;
@@ -936,14 +938,8 @@
 
     renderArticleView();
     setTimeout(() => {
-      const leader = typeof Teenieping !== 'undefined' ? Teenieping.getLeader() : null;
-      const msg = `${parsed.title}. Read the article and tap words to fill in the blanks!`;
-      if (typeof TeeniepingAudio !== 'undefined') {
-        TeeniepingAudio.speakText(msg, { charId: leader ? leader.id : 'heartsping', rate: 0.85 });
-      } else {
-        Speech.say(msg, { rate: 0.85 });
-      }
-    }, 300);
+      readActiveParagraphUpToBlank();
+    }, 400);
   }
 
   function renderArticleView() {
@@ -968,9 +964,11 @@
         if (seg.type === 'text') {
           for (const m of seg.text.matchAll(/\S+/g)) {
             const btn = document.createElement('button');
-            btn.className = 'word';
+            btn.className = `word ${articleState.tapWordMode ? 'tap-ready' : ''}`;
             btn.textContent = m[0];
+            btn.type = 'button';
             btn.dataset.start = charOffset + m.index;
+            btn.setAttribute('aria-label', `Word: ${m[0]}`);
             pEl.append(btn, ' ');
           }
           charOffset += seg.text.length;
@@ -981,15 +979,17 @@
           const word = filled[bIdx] || parsed.blanks[bIdx].correct;
 
           if (isFilled) {
-            const span = document.createElement('span');
-            span.className = 'article-blank filled';
-            span.textContent = filled[bIdx];
-            span.dataset.start = charOffset;
-            span.setAttribute('aria-label', `Blank ${bIdx + 1} filled with ${filled[bIdx]}`);
-            pEl.append(span, ' ');
+            const btn = document.createElement('button');
+            btn.className = `article-blank filled ${articleState.tapWordMode ? 'tap-ready' : ''}`;
+            btn.textContent = filled[bIdx];
+            btn.type = 'button';
+            btn.dataset.start = charOffset;
+            btn.setAttribute('aria-label', `Blank ${bIdx + 1} filled with ${filled[bIdx]}. Tap to hear pronunciation`);
+            pEl.append(btn, ' ');
           } else {
             const btn = document.createElement('button');
-            btn.className = `article-blank ${isActive ? 'active' : 'waiting'}`;
+            btn.type = 'button';
+            btn.className = `article-blank ${isActive ? 'active' : 'waiting'} ${isActive && articleState.hostReading ? 'waiting-for-host' : ''}`;
             btn.dataset.blankIdx = bIdx;
             btn.dataset.start = charOffset;
             btn.innerHTML = `${isActive ? '?' : '___'} <span class="blank-num">${bIdx + 1}</span>`;
@@ -1006,32 +1006,169 @@
     renderWordBank();
   }
 
+  function getActiveParagraphInfo() {
+    const { parsed, filled, activeBlankIndex } = articleState;
+    if (!parsed || activeBlankIndex == null || activeBlankIndex < 0) return null;
+    let targetPIdx = -1;
+    for (let i = 0; i < parsed.parsedParagraphs.length; i++) {
+      if (parsed.parsedParagraphs[i].some((seg) => seg.type === 'blank' && seg.blankIndex === activeBlankIndex)) {
+        targetPIdx = i;
+        break;
+      }
+    }
+    if (targetPIdx === -1) return null;
+
+    const spokenText = typeof getParagraphTextUpToBlank === 'function'
+      ? getParagraphTextUpToBlank(parsed, filled, activeBlankIndex)
+      : '';
+
+    return { pIdx: targetPIdx, spokenText };
+  }
+
+  function readActiveParagraphUpToBlank() {
+    clearStorySpeaking();
+    clearTimeout(articleState.safetyTimer);
+    if (typeof TeeniepingAudio !== 'undefined') TeeniepingAudio.stop();
+    if (typeof Speech !== 'undefined') Speech.stop();
+
+    const info = getActiveParagraphInfo();
+    if (!info || !info.spokenText) {
+      articleState.hostReading = false;
+      articleState.locked = false;
+      renderWordBank();
+      return;
+    }
+
+    const { pIdx, spokenText } = info;
+    articleState.hostReading = true;
+    articleState.locked = true;
+    renderWordBank();
+
+    const paraEls = $$('#article-paragraphs .article-p');
+    const pEl = paraEls[pIdx];
+    const blankBtn = pEl ? pEl.querySelector(`.article-blank[data-blank-idx="${articleState.activeBlankIndex}"]`) : null;
+    if (blankBtn) {
+      blankBtn.classList.add('waiting-for-host');
+    }
+
+    // Collect spoken words inside this paragraph up to the active blank
+    const wordsInPara = [];
+    if (pEl) {
+      for (const child of pEl.children) {
+        if (child === blankBtn) break;
+        if (child.matches('.word, .article-blank.filled')) {
+          wordsInPara.push(child);
+        }
+      }
+    }
+
+    // Map character offsets in spokenText for read-along boundary tracking
+    let searchIdx = 0;
+    for (const wEl of wordsInPara) {
+      const clean = wEl.textContent.trim();
+      const idx = spokenText.indexOf(clean, searchIdx);
+      wEl.dataset.spokenStart = idx !== -1 ? idx : searchIdx;
+      if (idx !== -1) searchIdx = idx + clean.length;
+    }
+
+    const boundaryHandler = (charIndex) => {
+      let activeWord = wordsInPara[0];
+      for (const w of wordsInPara) {
+        if (Number(w.dataset.spokenStart) <= charIndex) {
+          activeWord = w;
+        }
+      }
+      clearStorySpeaking();
+      if (activeWord) {
+        activeWord.classList.add('speaking');
+      }
+    };
+
+    const finishReading = () => {
+      clearTimeout(articleState.safetyTimer);
+      clearStorySpeaking();
+      if (blankBtn) {
+        blankBtn.classList.remove('waiting-for-host');
+      }
+      articleState.hostReading = false;
+      articleState.locked = false;
+      renderWordBank();
+      Sound.pop?.();
+    };
+
+    // Watchdog timer: ensure child is never permanently locked if audio stalls
+    const safetyMs = Math.max(3500, (spokenText.split(/\s+/).length * 800) + 1400);
+    articleState.safetyTimer = setTimeout(() => {
+      if (articleState.hostReading) {
+        finishReading();
+      }
+    }, safetyMs);
+
+    const leader = typeof Teenieping !== 'undefined' ? Teenieping.getLeader() : null;
+    if (typeof TeeniepingAudio !== 'undefined') {
+      TeeniepingAudio.speakText(spokenText, {
+        charId: leader ? leader.id : 'heartsping',
+        rate: 0.82,
+        onBoundary: boundaryHandler,
+        onEnd: finishReading,
+      });
+    } else {
+      Speech.say(spokenText, {
+        pitch: leader ? leader.pitch : 1.25,
+        rate: leader ? leader.rate : 0.82,
+        onBoundary: boundaryHandler,
+        onEnd: finishReading,
+      });
+    }
+  }
+
   function renderWordBank() {
     const { parsed, filled, activeBlankIndex } = articleState;
     const allDone = parsed.blanks.every((_, i) => filled[i] != null);
+    const listenBtns = $$('#btn-story-listen-again, #btn-bank-listen-again');
 
     if (allDone) {
       $('#bank-tag').textContent = 'Article Complete! 🌟';
       $('#bank-prompt').textContent = 'You filled in every blank! Listen to the full article or collect your stars.';
       $('#bank-choices').innerHTML = '';
       $('#article-complete-actions').hidden = false;
+      listenBtns.forEach((btn) => { btn.hidden = true; });
       setFeedback('#article-feedback', 'Awesome reading! 🎉', 'good');
       return;
     }
 
     const currentBlank = parsed.blanks[activeBlankIndex];
     $('#bank-tag').textContent = `Blank ${activeBlankIndex + 1} of ${parsed.blanks.length}`;
-    $('#bank-prompt').textContent = `Choose the word for blank ${activeBlankIndex + 1}:`;
+    const leader = typeof Teenieping !== 'undefined' ? Teenieping.getLeader() : null;
+    const leaderName = leader ? leader.name : 'Host';
+
+    if (articleState.hostReading) {
+      $('#bank-prompt').innerHTML = `<span class="host-reading-pulse">🎧 ${leaderName} is reading...</span><span class="host-reading-tip">Listen to the story! 👂</span>`;
+    } else if (articleState.tapWordMode) {
+      $('#bank-prompt').innerHTML = `👆 <b>Tap each word</b> to hear its pronunciation!`;
+    } else {
+      $('#bank-prompt').textContent = `Choose the word for blank ${activeBlankIndex + 1}:`;
+    }
     $('#article-complete-actions').hidden = true;
+
+    listenBtns.forEach((btn) => {
+      btn.hidden = false;
+      btn.disabled = false;
+    });
     setFeedback('#article-feedback', '');
 
     const choicesEl = $('#bank-choices');
     choicesEl.innerHTML = currentBlank.choices.map((w) => `
-      <button class="bank-choice-btn" data-word="${w}">${w}</button>
+      <button class="bank-choice-btn ${articleState.hostReading ? 'host-reading' : ''}" data-word="${w}" ${articleState.hostReading ? 'disabled' : ''}>${w}</button>
     `).join('');
   }
 
   $('#bank-choices').addEventListener('click', (e) => {
+    if (articleState.hostReading) {
+      const leader = typeof Teenieping !== 'undefined' ? Teenieping.getLeader() : null;
+      setFeedback('#article-feedback', `🎧 Let ${leader ? leader.name : 'the host'} finish reading first! 👂`, 'try');
+      return;
+    }
     const btn = e.target.closest('.bank-choice-btn');
     if (!btn || articleState.locked || btn.disabled) return;
     const word = btn.dataset.word;
@@ -1062,8 +1199,10 @@
           Sound.win();
           confetti(50);
           cheerWithTeenieping('You completed the entire article! Great reading!');
+        } else {
+          readActiveParagraphUpToBlank();
         }
-      }, 1100);
+      }, 1200);
     } else {
       btn.disabled = true;
       btn.classList.add('wrong');
@@ -1084,28 +1223,46 @@
     const blankBtn = e.target.closest('.article-blank:not(.filled)');
     if (blankBtn) {
       Sound.tap();
+      clearStorySpeaking();
+      clearTimeout(articleState.safetyTimer);
+      if (typeof TeeniepingAudio !== 'undefined') TeeniepingAudio.stop();
+      if (typeof Speech !== 'undefined') Speech.stop();
       articleState.activeBlankIndex = Number(blankBtn.dataset.blankIdx);
+      articleState.tapWordMode = false;
       renderArticleView();
+      readActiveParagraphUpToBlank();
       return;
     }
 
-    const wordBtn = e.target.closest('.word');
-    if (wordBtn) {
+    const wordEl = e.target.closest('.word, .article-blank.filled');
+    if (wordEl) {
       clearStorySpeaking();
-      wordBtn.classList.add('speaking');
+      clearTimeout(articleState.safetyTimer);
+      if (articleState.hostReading) {
+        if (typeof TeeniepingAudio !== 'undefined') TeeniepingAudio.stop();
+        if (typeof Speech !== 'undefined') Speech.stop();
+        articleState.hostReading = false;
+        articleState.locked = false;
+        renderWordBank();
+      }
+      wordEl.classList.add('speaking');
       const leader = typeof Teenieping !== 'undefined' ? Teenieping.getLeader() : null;
-      const cleanWord = wordBtn.textContent.replace(/[^\w']/g, '');
-      if (typeof TeeniepingAudio !== 'undefined') {
-        TeeniepingAudio.speakText(cleanWord, {
-          charId: leader ? leader.id : 'heartsping',
-          rate: 0.75,
-          onEnd: () => wordBtn.classList.remove('speaking'),
-        });
-      } else {
-        Speech.say(cleanWord, {
-          rate: 0.7,
-          onEnd: () => wordBtn.classList.remove('speaking'),
-        });
+      const cleanWord = wordEl.textContent.replace(/[^\w']/g, '').trim();
+      if (cleanWord) {
+        Sound.tap?.();
+        if (typeof TeeniepingAudio !== 'undefined') {
+          TeeniepingAudio.speakText(cleanWord, {
+            charId: leader ? leader.id : 'heartsping',
+            rate: 0.75,
+            onEnd: () => wordEl.classList.remove('speaking'),
+          });
+        } else {
+          Speech.say(cleanWord, {
+            pitch: leader ? leader.pitch : 1.25,
+            rate: 0.72,
+            onEnd: () => wordEl.classList.remove('speaking'),
+          });
+        }
       }
     }
   });
@@ -1127,6 +1284,7 @@
 
   function readArticleAloud() {
     clearStorySpeaking();
+    clearTimeout(articleState.safetyTimer);
     const text = getFullArticleText(true);
     const leader = typeof Teenieping !== 'undefined' ? Teenieping.getLeader() : null;
     const words = $$('#article-paragraphs .word, #article-paragraphs .article-blank.filled');
@@ -1157,8 +1315,69 @@
     }
   }
 
+  function activateListenAgainMode() {
+    clearStorySpeaking();
+    clearTimeout(articleState.safetyTimer);
+    if (typeof TeeniepingAudio !== 'undefined') TeeniepingAudio.stop();
+    if (typeof Speech !== 'undefined') Speech.stop();
+
+    articleState.hostReading = false;
+    articleState.locked = false;
+    articleState.tapWordMode = true;
+
+    // Remove waiting-for-host animation from blanks
+    $$('#article-paragraphs .article-blank.waiting-for-host').forEach((b) => {
+      b.classList.remove('waiting-for-host');
+    });
+
+    // Add .tap-ready to all words in the article
+    $$('#article-paragraphs .word, #article-paragraphs .article-blank.filled').forEach((w) => {
+      w.classList.add('tap-ready');
+    });
+
+    renderWordBank();
+
+    $('#bank-prompt').innerHTML = `👆 <b>Tap each word</b> to hear its pronunciation!`;
+    setFeedback('#article-feedback', '🔊 Tap any word to hear its pronunciation! Then choose the best word.', 'good');
+
+    const tip = $('#story-tap-tip');
+    if (tip) {
+      tip.classList.add('highlight-tip');
+      setTimeout(() => tip.classList.remove('highlight-tip'), 2500);
+    }
+
+    const leader = typeof Teenieping !== 'undefined' ? Teenieping.getLeader() : null;
+    const msg = 'Tap each word to hear it!';
+    if (typeof TeeniepingAudio !== 'undefined') {
+      TeeniepingAudio.speakText(msg, {
+        charId: leader ? leader.id : 'heartsping',
+        rate: 0.9,
+      });
+    } else {
+      Speech.say(msg, {
+        pitch: leader ? leader.pitch : 1.25,
+        rate: 0.9,
+      });
+    }
+  }
+
   $('#btn-story-read').addEventListener('click', () => {
-    readArticleAloud();
+    Sound.tap();
+    articleState.tapWordMode = false;
+    $$('#article-paragraphs .tap-ready').forEach((w) => w.classList.remove('tap-ready'));
+    const allDone = articleState.parsed && articleState.parsed.blanks.every((_, i) => articleState.filled[i] != null);
+    if (allDone) {
+      readArticleAloud();
+    } else {
+      readActiveParagraphUpToBlank();
+    }
+  });
+
+  $$('#btn-story-listen-again, #btn-bank-listen-again').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      Sound.tap();
+      activateListenAgainMode();
+    });
   });
 
   $('#btn-read-completed').addEventListener('click', () => {
@@ -1196,6 +1415,10 @@
   }
 
   $('#btn-stories-back').addEventListener('click', () => {
+    clearStorySpeaking();
+    clearTimeout(articleState.safetyTimer);
+    articleState.hostReading = false;
+    articleState.locked = false;
     if (typeof TeeniepingAudio !== 'undefined') TeeniepingAudio.stop();
     Speech.stop();
     if (!$('#story-reader').hidden) showStoryShelf();
@@ -2362,7 +2585,32 @@
     if (badgeEl) badgeEl.textContent = puzzle.type === 'reading' ? '📖 Reading Challenge' : '🔢 Math Market';
 
     const promptEl = $('#city-q-prompt');
-    if (promptEl) promptEl.textContent = puzzle.prompt;
+    const listenAgainBtn = $('#btn-city-listen-again');
+    if (listenAgainBtn) listenAgainBtn.hidden = puzzle.type !== 'reading';
+
+    if (promptEl) {
+      if (puzzle.type === 'reading') {
+        promptEl.innerHTML = '';
+        const parts = puzzle.prompt.split(' ');
+        parts.forEach((w) => {
+          if (w.includes('______')) {
+            const span = document.createElement('span');
+            span.className = 'city-prompt-blank';
+            span.textContent = w;
+            promptEl.append(span, ' ');
+          } else {
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'word tap-ready';
+            btn.textContent = w;
+            btn.setAttribute('aria-label', `Word: ${w}`);
+            promptEl.append(btn, ' ');
+          }
+        });
+      } else {
+        promptEl.textContent = puzzle.prompt;
+      }
+    }
 
     const marketTray = $('#city-market-tray');
     if (marketTray) {
@@ -2403,22 +2651,73 @@
 
     const leader = typeof Teenieping !== 'undefined' ? Teenieping.getLeader() : null;
     const speechText = puzzle.speechText || puzzle.prompt;
-    if (typeof TeeniepingAudio !== 'undefined') {
+
+    if (puzzle.type === 'reading') {
+      cityHeroState.readingLocked = true;
+      $$('#city-q-choices .race-choice-btn').forEach((btn) => {
+        btn.disabled = true;
+        btn.classList.add('host-reading');
+      });
+      if (feedbackBanner) {
+        feedbackBanner.hidden = false;
+        feedbackBanner.className = 'city-reading-banner';
+        feedbackBanner.innerHTML = `🎧 <b>${leader ? leader.name : 'Host'}</b> is reading... Listen carefully! 👂`;
+      }
+
+      const unlockCityReading = () => {
+        clearTimeout(cityHeroState.safetyTimer);
+        cityHeroState.readingLocked = false;
+        $$('#city-q-choices .race-choice-btn').forEach((btn) => {
+          btn.disabled = false;
+          btn.classList.remove('host-reading');
+        });
+        const fb = $('#city-feedback-banner');
+        if (fb && fb.classList.contains('city-reading-banner')) {
+          fb.hidden = true;
+        }
+      };
+
+      const safetyMs = Math.max(3500, (speechText.split(/\s+/).length * 800) + 1200);
+      clearTimeout(cityHeroState.safetyTimer);
+      cityHeroState.safetyTimer = setTimeout(() => {
+        if (cityHeroState.readingLocked) unlockCityReading();
+      }, safetyMs);
+
       setTimeout(() => {
         if (cityHeroState.activePuzzle === puzzle) {
-          TeeniepingAudio.speakText(speechText, { charId: leader ? leader.id : 'heartsping' });
+          if (typeof TeeniepingAudio !== 'undefined') {
+            TeeniepingAudio.speakText(speechText, {
+              charId: leader ? leader.id : 'heartsping',
+              onEnd: unlockCityReading,
+            });
+          } else {
+            Speech.say(speechText, {
+              pitch: leader ? leader.pitch : 1.25,
+              rate: leader ? leader.rate : 0.88,
+              onEnd: unlockCityReading,
+            });
+          }
         }
       }, 400);
     } else {
-      setTimeout(() => {
-        if (cityHeroState.activePuzzle === puzzle) {
-          Speech.say(speechText, { pitch: leader ? leader.pitch : 1.25, rate: leader ? leader.rate : 0.88 });
-        }
-      }, 400);
+      if (typeof TeeniepingAudio !== 'undefined') {
+        setTimeout(() => {
+          if (cityHeroState.activePuzzle === puzzle) {
+            TeeniepingAudio.speakText(speechText, { charId: leader ? leader.id : 'heartsping' });
+          }
+        }, 400);
+      } else {
+        setTimeout(() => {
+          if (cityHeroState.activePuzzle === puzzle) {
+            Speech.say(speechText, { pitch: leader ? leader.pitch : 1.25, rate: leader ? leader.rate : 0.88 });
+          }
+        }, 400);
+      }
     }
   }
 
   function handleCityStopChoice(choice, btn) {
+    if (cityHeroState.readingLocked) return;
     const puzzle = cityHeroState.activePuzzle;
     if (!puzzle) return;
 
@@ -2594,6 +2893,57 @@
     });
   }
 
+  const btnCityListenAgain = $('#btn-city-listen-again');
+  if (btnCityListenAgain) {
+    btnCityListenAgain.addEventListener('click', () => {
+      Sound.tap();
+      clearTimeout(cityHeroState.safetyTimer);
+      if (typeof TeeniepingAudio !== 'undefined') TeeniepingAudio.stop();
+      if (typeof Speech !== 'undefined') Speech.stop();
+      cityHeroState.readingLocked = false;
+      $$('#city-q-choices .race-choice-btn').forEach((btn) => {
+        btn.disabled = false;
+        btn.classList.remove('host-reading');
+      });
+      const fb = $('#city-feedback-banner');
+      if (fb && fb.classList.contains('city-reading-banner')) fb.hidden = true;
+      const leader = typeof Teenieping !== 'undefined' ? Teenieping.getLeader() : null;
+      if (typeof TeeniepingAudio !== 'undefined') {
+        TeeniepingAudio.speakText('Tap each word to hear it!', { charId: leader ? leader.id : 'heartsping', rate: 0.9 });
+      } else {
+        Speech.say('Tap each word to hear it!', { pitch: leader ? leader.pitch : 1.25, rate: 0.9 });
+      }
+    });
+  }
+
+  const cityQPromptEl = $('#city-q-prompt');
+  if (cityQPromptEl) {
+    cityQPromptEl.addEventListener('click', (e) => {
+      const btn = e.target.closest('.word');
+      if (!btn) return;
+      Sound.tap?.();
+      clearStorySpeaking();
+      btn.classList.add('speaking');
+      const leader = typeof Teenieping !== 'undefined' ? Teenieping.getLeader() : null;
+      const cleanWord = btn.textContent.replace(/[^\w']/g, '').trim();
+      if (cleanWord) {
+        if (typeof TeeniepingAudio !== 'undefined') {
+          TeeniepingAudio.speakText(cleanWord, {
+            charId: leader ? leader.id : 'heartsping',
+            rate: 0.75,
+            onEnd: () => btn.classList.remove('speaking'),
+          });
+        } else {
+          Speech.say(cleanWord, {
+            pitch: leader ? leader.pitch : 1.25,
+            rate: 0.72,
+            onEnd: () => btn.classList.remove('speaking'),
+          });
+        }
+      }
+    });
+  }
+
   // ---------- Teenieping Sweet Bakery Controller ----------
   let bakeryState = {
     category: 'mix',
@@ -2715,7 +3065,32 @@
     if (badgeEl) badgeEl.textContent = q.badge || '🥣 Kitchen Step';
 
     const promptEl = $('#bakery-q-prompt');
-    if (promptEl) promptEl.textContent = q.prompt;
+    const listenAgainBtn = $('#btn-bakery-listen-again');
+    if (listenAgainBtn) listenAgainBtn.hidden = q.category !== 'reading';
+
+    if (promptEl) {
+      if (q.category === 'reading') {
+        promptEl.innerHTML = '';
+        const parts = q.prompt.split(' ');
+        parts.forEach((w) => {
+          if (w.includes('______')) {
+            const span = document.createElement('span');
+            span.className = 'city-prompt-blank';
+            span.textContent = w;
+            promptEl.append(span, ' ');
+          } else {
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'word tap-ready';
+            btn.textContent = w;
+            btn.setAttribute('aria-label', `Word: ${w}`);
+            promptEl.append(btn, ' ');
+          }
+        });
+      } else {
+        promptEl.textContent = q.prompt;
+      }
+    }
 
     const bannerEl = $('#bakery-banner');
     if (bannerEl) bannerEl.hidden = true;
@@ -2730,10 +3105,61 @@
         btn.addEventListener('click', () => handleBakeryChoice(q.choices[idx], btn));
       });
     }
+
+    if (q.category === 'reading' && q.subType === 'recipe-cloze' && q.speechText) {
+      bakeryState.readingLocked = true;
+      $$('#bakery-choices .race-choice-btn').forEach((btn) => {
+        btn.disabled = true;
+        btn.classList.add('host-reading');
+      });
+      if (bannerEl) {
+        bannerEl.hidden = false;
+        bannerEl.className = 'city-reading-banner';
+        const leader = typeof Teenieping !== 'undefined' ? Teenieping.getLeader() : null;
+        bannerEl.innerHTML = `🎧 <b>${leader ? leader.name : 'Host'}</b> is reading... Listen carefully! 👂`;
+      }
+
+      const unlockBakeryReading = () => {
+        clearTimeout(bakeryState.safetyTimer);
+        bakeryState.readingLocked = false;
+        $$('#bakery-choices .race-choice-btn').forEach((btn) => {
+          btn.disabled = false;
+          btn.classList.remove('host-reading');
+        });
+        const b = $('#bakery-banner');
+        if (b && b.classList.contains('city-reading-banner')) {
+          b.hidden = true;
+        }
+      };
+
+      const safetyMs = Math.max(3500, (q.speechText.split(/\s+/).length * 800) + 1200);
+      clearTimeout(bakeryState.safetyTimer);
+      bakeryState.safetyTimer = setTimeout(() => {
+        if (bakeryState.readingLocked) unlockBakeryReading();
+      }, safetyMs);
+
+      const leader = typeof Teenieping !== 'undefined' ? Teenieping.getLeader() : null;
+      setTimeout(() => {
+        if (bakeryState.question === q) {
+          if (typeof TeeniepingAudio !== 'undefined') {
+            TeeniepingAudio.speakText(q.speechText, {
+              charId: leader ? leader.id : 'heartsping',
+              onEnd: unlockBakeryReading,
+            });
+          } else {
+            Speech.say(q.speechText, {
+              pitch: leader ? leader.pitch : 1.25,
+              rate: leader ? leader.rate : 0.88,
+              onEnd: unlockBakeryReading,
+            });
+          }
+        }
+      }, 350);
+    }
   }
 
   function handleBakeryChoice(choice, btn) {
-    if (bakeryState.isLocked || !bakeryState.currentOrder || !bakeryState.question) return;
+    if (bakeryState.readingLocked || bakeryState.isLocked || !bakeryState.currentOrder || !bakeryState.question) return;
     const order = bakeryState.currentOrder;
     const banner = $('#bakery-banner');
 
@@ -2858,6 +3284,57 @@
         TeeniepingAudio.speakText(text, { charId: leader ? leader.id : 'heartsping' });
       } else {
         Speech.say(text, { pitch: leader ? leader.pitch : 1.25, rate: leader ? leader.rate : 0.88 });
+      }
+    });
+  }
+
+  const btnBakeryListenAgain = $('#btn-bakery-listen-again');
+  if (btnBakeryListenAgain) {
+    btnBakeryListenAgain.addEventListener('click', () => {
+      Sound.tap();
+      clearTimeout(bakeryState.safetyTimer);
+      if (typeof TeeniepingAudio !== 'undefined') TeeniepingAudio.stop();
+      if (typeof Speech !== 'undefined') Speech.stop();
+      bakeryState.readingLocked = false;
+      $$('#bakery-choices .race-choice-btn').forEach((btn) => {
+        btn.disabled = false;
+        btn.classList.remove('host-reading');
+      });
+      const b = $('#bakery-banner');
+      if (b && b.classList.contains('city-reading-banner')) b.hidden = true;
+      const leader = typeof Teenieping !== 'undefined' ? Teenieping.getLeader() : null;
+      if (typeof TeeniepingAudio !== 'undefined') {
+        TeeniepingAudio.speakText('Tap each word to hear it!', { charId: leader ? leader.id : 'heartsping', rate: 0.9 });
+      } else {
+        Speech.say('Tap each word to hear it!', { pitch: leader ? leader.pitch : 1.25, rate: 0.9 });
+      }
+    });
+  }
+
+  const bakeryQPromptEl = $('#bakery-q-prompt');
+  if (bakeryQPromptEl) {
+    bakeryQPromptEl.addEventListener('click', (e) => {
+      const btn = e.target.closest('.word');
+      if (!btn) return;
+      Sound.tap?.();
+      clearStorySpeaking();
+      btn.classList.add('speaking');
+      const leader = typeof Teenieping !== 'undefined' ? Teenieping.getLeader() : null;
+      const cleanWord = btn.textContent.replace(/[^\w']/g, '').trim();
+      if (cleanWord) {
+        if (typeof TeeniepingAudio !== 'undefined') {
+          TeeniepingAudio.speakText(cleanWord, {
+            charId: leader ? leader.id : 'heartsping',
+            rate: 0.75,
+            onEnd: () => btn.classList.remove('speaking'),
+          });
+        } else {
+          Speech.say(cleanWord, {
+            pitch: leader ? leader.pitch : 1.25,
+            rate: 0.72,
+            onEnd: () => btn.classList.remove('speaking'),
+          });
+        }
       }
     });
   }

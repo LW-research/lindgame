@@ -86,16 +86,64 @@ python3 server.py
 | **🔄 Character Switcher** | Taps `🔄 Switch` in the companion dock to open the fairy modal and choose any character (Heartsping, Lalaping, Chachaping, Gogoping, Dadaping, Happyping) or pick randomly | Agency, customization, emotional connection to favorite characters |
 | **🔢 Math Missions** | Solves **randomly generated 1–4 digit** addition and subtraction problems on a realistic graph-paper notebook board with interactive **Carry / Borrow (`+1` / `−1`) scratchpad boxes** above the tens, hundreds, and thousands columns | Place value (ones, tens, hundreds, thousands), regrouping/trading visualization, column arithmetic, mental math |
 | **📖 Word Hunt** | Alternates between "Listen & tap the word" and "Read the word & tap the picture" | Dolch sight-word auditory recognition and independent silent reading |
-| **📚 Story Time** | Reads **freshly generated 4-paragraph stories** on a ruled hardcover storybook page with bound spine texture (article on the left, word bank on the right) and fills in missing words | Grade 1 reading fluency, sentence context clues, vocabulary decoding |
+| **📚 Story Time** | Reads **freshly generated 4-paragraph stories** on a ruled hardcover storybook page with bound spine texture; the **child lets the host read each paragraph aloud up until the missing word**, watching live word-by-word highlights while answer choices remain locked, then unlocks choices to fill in the blank | Grade 1 reading fluency, sentence context clues, listening comprehension, phonemic decoding |
 | **🏎️ Turbo Racing** | Launches after an authentic **3-light F1 starting gantry (`3... 2... 1... GO!`)**, drives detailed racing karts (windshields, nose cones, decals, dynamic wheel spin, exhaust smoke) past scrolling parallax scenery, and watches live **6-speed gear (`G1–G6`), RPM tachometer, slipstream drafting, and leader gap telemetry** | Rapid mental arithmetic recall, instant sight-word decoding, high-energy motivation |
 | **🧩 Magic Blocks (Tetris)** | Watches a **real-time falling fairy piece** with a **projected landing ghost silhouette** on a 10×14 3D beveled crystal board; can nudge/rotate manually with tactile arcade buttons or arrow keys while correct answers cast a **Smart Fairy Drop** with vertical motion trails and line-clear callouts (`✨ SINGLE!`, `🔥 DOUBLE!`, `👑 TETRIS!`) | Spatial reasoning, line-clearing gratification, mental math & sight-word accuracy with optional arcade control |
-| **🌍 City Hero** | Flies between world cities (Tokyo 🗼, Washington D.C. 🏛️, Beijing 🏯, Shanghai 🏙️) with realistic **boarding passes (`TP-801`, airport codes, weather)**, views **custom-illustrated panoramic SVG landmark dioramas** with camera shutter flashes, and uses a **visual Market Receipt & Coin Tray** to solve currency math and collect souvenirs for the Hero Scrapbook | Cultural & geographic awareness, applied real-world money math (coins, prices, totals), reading comprehension in real-world contexts |
-| **🍰 Sweet Bakery** | Runs Harmony Town's Patisserie! Fulfills 3-step Teenieping customer order tickets (`1. Mix Batter` $\rightarrow$ `2. Pipe Frosting` $\rightarrow$ `3. Garnish & Serve`) across **Chef Mix**, **Math Kitchen**, or **Reading Recipes** modes, watching each dessert assemble layer-by-layer on a live SVG kitchen turntable and convection oven before displaying it in the glass pastry case | Applied kitchen measurement math, recipe reading comprehension, sequential multi-step problem solving |
+| **🌍 City Hero** | Flies between world cities (Tokyo 🗼, Washington D.C. 🏛️, Beijing 🏯, Shanghai 🏙️) with realistic **boarding passes (`TP-801`, airport codes, weather)**, views **custom-illustrated panoramic SVG landmark dioramas** with camera shutter flashes; in **Reading Challenges**, the **child lets the host read the descriptive landmark paragraph up until the blank**, unlocking choices once read | Cultural & geographic awareness, applied real-world money math (coins, prices, totals), reading comprehension in real-world contexts |
+| **🍰 Sweet Bakery** | Runs Harmony Town's Patisserie! Fulfills 3-step Teenieping customer order tickets (`1. Mix Batter` $\rightarrow$ `2. Pipe Frosting` $\rightarrow$ `3. Garnish & Serve`) across **Chef Mix**, **Math Kitchen**, or **Reading Recipes** modes; in **Reading Recipes**, the **host reads the recipe step up to the missing ingredient** while choices lock, then unlocks choices for the child | Applied kitchen measurement math, recipe reading comprehension, sequential multi-step problem solving |
 | **🍄 Super Jump Run** | Side-scrolling **Super Mario-style platformer** across 3 Kingdom Worlds (`1-1 Mushroom Meadow`, `1-2 Crystal Underground`, `1-3 Sunset Athletic Sky`)! Solves Math & Reading questions from the existing problem generators to jump, bonk golden `[?]` Mystery Blocks, pop coins (`🪙`), earn **Super Mushroom (`🍄`)** & **Super Star (`🌟`)** power-ups, leap over green Warp Pipes and critters, and slide down the **Castle Flagpole (`🚩`)** after 8 checkpoints | Rapid math & reading recall, streak reinforcement via power-ups, visual obstacle course progression |
 | **💖 Teenieping Magic Story** | Reads about Princess Romi, Harmony Town, Heartsping, and the magic catch cube | Immersive cartoon storytelling connecting reading with favorite characters |
-| **🔊 Read to Me / Tap Word** | Hears whole stories read aloud in character voice with live word highlighting, or taps any word to hear it | Phonemic decoding, speech-text synchronization, reading confidence |
+| **🔊 Read to Me / Listen Again** | **"Read to me"**: Host reads aloud from the beginning of the paragraph up to the position we need to fill in the words with live word-by-word tracking while choices lock; **"Listen again"**: Stops automated playback, unlocks choices, highlights all words with `.tap-ready`, and lets the kid click each word individually to hear its pronunciation at 0.75x speed before choosing the missing word | Phonemic decoding, speech-text synchronization, self-paced pronunciation exploration, reading confidence |
 | **💡 Base-Ten Helper** | Visualizes numbers as place-value blocks (thousands cubes, hundreds flats, tens rods, ones cubes) with spoken steps in Teenieping's voice | Concrete-to-abstract transition, eliminating math anxiety |
 | **⭐ Stars & Rocket Fuel** | Earns stars across all 8 modes to unlock outer planets, scrapbook badges, and library honors | Intrinsic motivation, self-directed learning, goal progression |
+
+---
+
+## 📖 Reading Game Dual-Mode Flow ("Read to Me" vs "Listen Again")
+
+LindGame implements a tailored pedagogical flow for young readers:
+
+```
+                               ┌────────────────────────────────────────────────────────┐
+                               │               Story Time Cloze Paragraph               │
+                               │   (Paragraph with blank position to be filled in)      │
+                               └───────────────────────────┬────────────────────────────┘
+                                                           │
+                                ┌──────────────────────────┴──────────────────────────┐
+                                │                                                     │
+                                ▼                                                     ▼
+              ┌───────────────────────────────────┐                 ┌───────────────────────────────────┐
+              │      Click "🔊 Read to me"        │                 │     Select "👂 Listen again"      │
+              │   (#btn-story-read)               │                 │  (#btn-story-listen-again / bank) │
+              └─────────────────┬─────────────────┘                 └─────────────────┬─────────────────┘
+                                │                                                     │
+                                ▼                                                     ▼
+              ┌───────────────────────────────────┐                 ┌───────────────────────────────────┐
+              │ getParagraphTextUpToBlank()       │                 │ • Stop continuous narration       │
+              │ • Reads from paragraph start      │                 │ • Unlock choices immediately      │
+              │ • Stops at the active blank       │                 │ • Set words to .tap-ready mode    │
+              │ • Synchronized word highlight     │                 │ • Host character announces:       │
+              │ • Choices LOCKED while reading    │                 │   "Tap each word to hear it!"     │
+              └─────────────────┬─────────────────┘                 └─────────────────┬─────────────────┘
+                                │                                                     │
+                                ▼                                                     ▼
+              ┌───────────────────────────────────┐                 ┌───────────────────────────────────┐
+              │ Audio reaches blank position:     │                 │ Kid clicks ANY individual word    │
+              │ • Choices UNLOCKED                │                 │ (.word or .article-blank.filled): │
+              │ • Active blank glows '?'          │                 │ • Word scales & glows .speaking   │
+              │ • Chime pop sound plays           │                 │ • Speaks cleanWord at 0.75x rate  │
+              └─────────────────┬─────────────────┘                 └─────────────────┬─────────────────┘
+                                │                                                     │
+                                └──────────────────────────┬──────────────────────────┘
+                                                           │
+                                                           ▼
+                                            ┌─────────────────────────────┐
+                                            │ Kid selects choice from bank│
+                                            │ • Correct: blank filled! ⭐  │
+                                            │ • Advances to next blank &  │
+                                            │   reads next paragraph      │
+                                            └─────────────────────────────┘
+```
 
 ---
 
@@ -197,28 +245,31 @@ The game combines pre-recorded cartoon voice clips with a local neural TTS API:
         │                  │                  │                  │                  │                  │                  │                  │                             │
         ▼                  ▼                  ▼                  ▼                  ▼                  ▼                  ▼                  ▼                             │
 ┌────────────────┐ ┌────────────────┐ ┌────────────────┐ ┌────────────────┐ ┌────────────────┐ ┌────────────────┐ ┌────────────────┐ ┌────────────────┐                    │
-│ MathEngine     │ │ Word Hunt 8 rnd│ │ StoryGen       │ │ RaceEngine     │ │ TetrisEngine   │ │ CityHeroEngine │ │ BakeryEngine   │ │PlatformerEngine│                    │
-│ + Carry/Borrow │ │ listen/read pic│ │ Hardcover page │ │ Gear G1-G6, RPM│ │ Ghost + Gravity│ │ SVG Diorama +  │ │ Order Ticket + │ │ [?] Blocks,    │                    │
-│ Scratchpad Row │ │                │ │ + 4-para cloze │ │ & Slipstream   │ │ + Arcade Nudges│ │ Market Tray    │ │ 3-Layer Cake   │ │ Pipes & Castle │                    │
+│ MathEngine     │ │ Word Hunt 8 rnd│ │ Story Reader   │ │ RaceEngine     │ │ TetrisEngine   │ │ CityHeroEngine │ │ BakeryEngine   │ │PlatformerEngine│                    │
+│ + Carry/Borrow │ │ listen/read pic│ │ • 🔊Read-to-Me │ │ Gear G1-G6, RPM│ │ Ghost + Gravity│ │ SVG Diorama +  │ │ Order Ticket + │ │ [?] Blocks,    │                    │
+│ Scratchpad Row │ │                │ │ • 👂Listen-Again││ & Slipstream   │ │ + Arcade Nudges│ │ Reading Cloze/ │ │ Recipe Cloze/  │ │ Pipes & Castle │                    │
+│                │ │                │ │   (Tap-Word TTS│ │                │ │                │ │ Market Math    │ │ Kitchen Steps  │ │                │                    │
 └───────┬────────┘ └───────┬────────┘ └───────┬────────┘ └───────┬────────┘ └───────┬────────┘ └───────┬────────┘ └───────┬────────┘ └───────┬────────┘                    │
         │                  │                  │                  │                  │                  │                  │                  │                             │
         ▼                  ▼                  ▼                  ▼                  ▼                  ▼                  ▼                  ▼                             │
-   Solve Problem      Pick Sight Word    Fill Cloze Blank   Fast Boost <3.2s   Smart Drop Trail   Shutter/Register   Bake 3 Layers      Bonk [?] & Jump                    │
-   (+1 ⭐ / round)     (+1 ⭐ / round)     (+4 ⭐ / story)     (1000m Podium)     (10 Lines Goal)    (4 City Stops)     (3 Orders Goal)    (8 Checkpoints)                    │
-        │                  │                  │                  │                  │                  │                  │                  │                             │
-        └──────────────────┴──────────────────┴──────────────────┴─────────┬────────┴──────────────────┴──────────────────┴──────────────────┘                             │
-                                                                           ▼                                                                                               │
-                                                ┌─────────────────────────────────────────────────────┐                                                                    │
-                                                │              Teenieping.stepQuestion()              │                                                                    │
-                                                │  • Plays TeeniepingAudio.playCheerWithSpeech()      │                                                                    │
-                                                │  • Every 3 solved questions -> Auto Tag-Team Switch │                                                                    │
-                                                └──────────────────────────┬──────────────────────────┘                                                                    │
-                                                                           │ (mission / round / story / race / blocks / city / bakery / jump course complete)              │
-                                                                           ▼                                                                                               │
-                                                ┌─────────────────────────────────────────────────────┐                                                                    │
-                                                │                    REWARD DIALOG                    │                                                                    │
-                                                │  Stars awarded + Fanfare + Teenieping Victory Voice │────────────────────────── save & return ───────────────────────────┘
-                                                └─────────────────────────────────────────────────────┘
+   Solve Problem      Pick Sight Word    Host Reads Blank   Fast Boost <3.2s   Smart Drop Trail   Host Reads Stop/   Host Reads Recipe/ Bonk [?] & Jump                    │
+   (+1 ⭐ / round)     (+1 ⭐ / round)    Choices Unlock ->  (1000m Podium)     (10 Lines Goal)    Register Coins     Bake 3 Layers      (8 Checkpoints)                    │
+        │                  │             Kid Fills Word                        │                  (4 City Stops)     (3 Orders Goal)           │                             │
+        │                  │             (+4 ⭐ / story)                        │                         │                  │                 │                             │
+        └──────────────────┴──────────────────┴──────────────────┴─────────────┴─────────────────────────┴──────────────────┴─────────────────┘                             │
+                                                                               │                                                                                               │
+                                                                               ▼                                                                                               │
+                                                    ┌─────────────────────────────────────────────────────┐                                                                    │
+                                                    │              Teenieping.stepQuestion()              │                                                                    │
+                                                    │  • Plays TeeniepingAudio.playCheerWithSpeech()      │                                                                    │
+                                                    │  • Every 3 solved questions -> Auto Tag-Team Switch │                                                                    │
+                                                    └──────────────────────────┬──────────────────────────┘                                                                    │
+                                                                               │ (mission / round / story / race / blocks / city / bakery / jump course complete)              │
+                                                                               ▼                                                                                               │
+                                                    ┌─────────────────────────────────────────────────────┐                                                                    │
+                                                    │                    REWARD DIALOG                    │                                                                    │
+                                                    │  Stars awarded + Fanfare + Teenieping Victory Voice │────────────────────────── save & return ───────────────────────────┘
+                                                    └─────────────────────────────────────────────────────┘
 ```
 
 ---
@@ -295,7 +346,7 @@ npm test
 # or: node --test tests/*.test.js
 ```
 
-All 67 tests execute in under 1 second:
+All 69 tests execute in under 1 second:
 - `tests/platformer.test.js`:
   - 8-checkpoint Super Mario-style run initialization with Kingdom World themes and obstacle course (`createRunState`)
   - `[?]` Mystery Block Math & Reading question generation delegating to existing `MathEngine`, `WORD_LEVELS`, and `RaceEngine` (`makeBlockQuestion`)
@@ -346,6 +397,8 @@ All 67 tests execute in under 1 second:
   - Randomized first-grade article generation
   - Cloze blank and distractor extraction
   - Full passage text reconstruction
+  - Sequential paragraph reading up to active cloze blank (`getParagraphTextUpToBlank`)
+  - Clean word pronunciation extraction handling punctuation and contractions
 - `tests/race.test.js`:
   - 4 unique choices generation with correct answer for math sprint
   - Sight word and picture question generation with correct answer for reading sprint
